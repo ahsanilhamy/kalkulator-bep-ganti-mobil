@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kalkulator BEP Mobil</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: kolom tunggal. Input 3 kolom di paling atas, ringkasan 5 opsi, lalu detail dan asumsi yang bisa diubah.
+   Warna: abu kebiruan netral; amber = tahan mobil lama, teal = tukar ke mobil baru; badge EV teal, ICE amber-abu.
+   Huruf: Archivo (judul), IBM Plex Sans (teks), IBM Plex Mono (angka). */
+:root{
+  --bg:#EDF0F3; --surface:#FFFFFF; --field:#F5F7F9; --ink:#101A24; --muted:#556575; --line:#D3DAE1;
+  --a:#B4570A; --b:#0B7A75; --good:#1B7F4B; --bad:#B3261E; --warn:#8A5A00; --focus:#2459D6;
+  --good-bg:#E3F3EA; --bad-bg:#FBE7E5; --warn-bg:#FBF0D6; --ev-bg:#DDF2F0; --ice-bg:#F3E7DA;
+  --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D141B; --surface:#151F29; --field:#0F1923; --ink:#E8EEF3; --muted:#9AA9B8; --line:#263544;
+    --a:#E8903F; --b:#3CC2B8; --good:#55C58A; --bad:#F0786F; --warn:#E0B04A; --focus:#7AA2FF;
+    --good-bg:#10281D; --bad-bg:#2E1715; --warn-bg:#2B2210; --ev-bg:#0F2B2A; --ice-bg:#2D2013; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D141B; --surface:#151F29; --field:#0F1923; --ink:#E8EEF3; --muted:#9AA9B8; --line:#263544;
+  --a:#E8903F; --b:#3CC2B8; --good:#55C58A; --bad:#F0786F; --warn:#E0B04A; --focus:#7AA2FF;
+  --good-bg:#10281D; --bad-bg:#2E1715; --warn-bg:#2B2210; --ev-bg:#0F2B2A; --ice-bg:#2D2013; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(26px,4vw,38px);font-weight:800;line-height:1.1}
+h2{font-size:19px;font-weight:700}
+h3{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+p{margin:0}
+a{color:var(--focus)}
+.lede{color:var(--muted);max-width:70ch;margin-top:8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card.main{border-top:3px solid var(--b)}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.grid3{display:grid;gap:12px;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:640px){.grid3{grid-template-columns:minmax(0,1fr)}}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld[hidden],[hidden]{display:none!important}
+.fld label{font-size:13px;font-weight:500;line-height:1.3}
+.inp{display:flex;align-items:stretch;border:1px solid var(--line);background:var(--field);border-radius:4px}
+.inp:focus-within{outline:2px solid var(--focus);outline-offset:1px}
+.inp input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font-family:var(--f-mono);font-size:15px;padding:9px 10px;outline:none}
+.fld>select{border:1px solid var(--line);background:var(--field);color:var(--ink);font:inherit;font-size:15px;padding:9px 10px;border-radius:4px;min-width:0}
+.fld>select:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.u{display:flex;align-items:center;padding:0 10px;font-size:12px;color:var(--muted);border-left:1px solid var(--line);white-space:nowrap;font-family:var(--f-mono)}
+.hint{font-size:12px;color:var(--muted);line-height:1.35}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:13px}
+.chk input{margin-top:3px;accent-color:var(--b)}
+.tag{display:inline-block;margin-left:6px;padding:0 5px;font-family:var(--f-mono);font-size:10.5px;font-weight:500;border-radius:3px;vertical-align:1px;text-decoration:none;border:1px solid var(--line);color:var(--muted)}
+.tag.src{color:var(--good);border-color:var(--good)}
+.tag.asm{color:var(--warn);border-color:var(--warn)}
+.auto{font-size:13px;color:var(--muted);border-left:3px solid var(--line);padding-left:10px}
+.auto b{color:var(--ink);font-weight:600}
+.cardhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.takeaway{font-size:15px}
+.takeaway b{font-weight:600}
+/* opsi */
+.base{display:flex;flex-direction:column;gap:6px;border:1px dashed var(--line);border-radius:6px;padding:12px;background:var(--field)}
+.base .t{font-weight:600}
+.opts{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.opt{display:grid;grid-template-columns:minmax(0,2.3fr) repeat(4,minmax(0,1fr));gap:10px 14px;align-items:center;width:100%;text-align:left;padding:12px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer}
+.opt:hover{border-color:var(--muted)}
+.opt:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.opt.on{border-color:var(--b);box-shadow:inset 0 0 0 1px var(--b);background:var(--field)}
+.oname{display:flex;gap:10px;align-items:center;min-width:0}
+.rank{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:13px;font-weight:500;background:var(--field);border:1px solid var(--line)}
+.opt.on .rank{background:var(--b);color:#fff;border-color:var(--b)}
+.n{font-weight:600;line-height:1.25;overflow-wrap:anywhere}
+.sub{font-size:12.5px;color:var(--muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:2px;font-family:var(--f-mono)}
+.pillT{display:inline-block;padding:0 7px;border-radius:99px;font-family:var(--f-body);font-size:11px;font-weight:700;letter-spacing:.04em}
+.pillT.ev{background:var(--ev-bg);color:var(--b)}
+.pillT.ice{background:var(--ice-bg);color:var(--a)}
+.cell .k{font-size:11.5px;color:var(--muted);line-height:1.25}
+.cell .v{font-family:var(--f-mono);font-size:14px;font-weight:500;margin-top:2px}
+.cell .v.big{font-family:var(--f-display);font-size:17px;font-weight:800}
+.good{color:var(--good)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+@media (max-width:760px){.opt{grid-template-columns:repeat(2,minmax(0,1fr))}.oname{grid-column:1/-1}}
+/* detail */
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600}
+.pill.good{background:var(--good-bg);color:var(--good)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.stat{border-top:1px solid var(--line);padding-top:8px;min-width:0}
+.stat .k{font-size:12px;color:var(--muted);line-height:1.3}
+.stat .v{font-family:var(--f-mono);font-size:15px;font-weight:500;margin-top:2px;overflow-wrap:anywhere}
+.insight{font-size:13.5px;border-left:3px solid var(--line);padding-left:10px}
+.insight b{font-weight:600}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px}
+.swatch{display:inline-block;width:22px;height:0;border-top:3px solid var(--a);vertical-align:middle;margin-right:6px}
+.swatch.b{border-top-color:var(--b)}
+.swatch.dash{border-top-style:dashed}
+.chartbox{overflow-x:auto}
+svg{display:block;width:100%;height:auto;max-width:100%}
+svg text{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button.b{font:inherit;font-size:13px;font-weight:500;padding:7px 12px;border-radius:4px;border:1px solid var(--line);background:var(--field);color:var(--ink);cursor:pointer}
+button.b:hover{border-color:var(--muted)}
+button.b:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+button.b.primary{background:var(--b);color:#fff;border-color:var(--b)}
+:root[data-theme="dark"] button.b.primary{color:#04201E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) button.b.primary{color:#04201E}}
+.toast{font-size:12px;color:var(--muted)}
+.tscroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+th{font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+th:first-child,td:first-child{text-align:left}
+td{font-family:var(--f-mono)}
+td:first-child{font-family:var(--f-body)}
+tr.total td{font-weight:600;border-top:2px solid var(--ink)}
+td.good{color:var(--good)}td.bad{color:var(--bad)}td.warn{color:var(--warn)}
+.srcT td,.srcT th{white-space:normal;text-align:left;vertical-align:top;font-family:var(--f-body);font-size:13px}
+.srcT td:nth-child(1){font-family:var(--f-mono);font-weight:500}
+.srcT td a{overflow-wrap:anywhere}
+.sens td,.sens th{text-align:center}
+.sens td:first-child,.sens th:first-child{text-align:left}
+.mt input{width:92px;border:1px solid var(--line);background:var(--field);color:var(--ink);font-family:var(--f-mono);font-size:13px;padding:4px 6px;border-radius:3px;text-align:right}
+.mt input:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.formula{font-family:var(--f-mono);font-size:12.5px;background:var(--field);border:1px solid var(--line);border-radius:4px;padding:10px;overflow-x:auto;white-space:pre;line-height:1.55}
+details{border-top:1px solid var(--line);padding-top:12px}
+details:first-of-type{border-top:0;padding-top:0}
+details summary{cursor:pointer;font-weight:600;font-family:var(--f-display);font-size:16px}
+details[open] summary{margin-bottom:12px}
+.note{font-size:13px;color:var(--muted)}
+.note b{color:var(--ink);font-weight:600}
+footer{font-size:12px;color:var(--muted)}
+.ok{display:flex;flex-direction:column;gap:16px}
+@media (prefers-reduced-motion:no-preference){button{transition:border-color .12s}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Kalkulator BEP Mobil</h1>
+    <p class="lede">Isi mobil Anda sekarang. Kami carikan lima mobil baru (EV dan bensin) yang masuk akal, lalu hitung kapan balik modalnya dibanding terus memakai mobil lama.</p>
+  </header>
+
+  <section class="card main" id="top" aria-label="Data mobil lama">
+    <h2>Mobil Anda sekarang</h2>
+    <div class="grid3">
+      <div class="fld"><label for="model">Merek dan model</label><select id="model"></select></div>
+      <div class="fld"><label for="year">Tahun produksi</label><div class="inp"><input id="year" type="number" inputmode="numeric" step="1" min="2000" max="2026"><span class="u">tahun</span></div></div>
+      <div class="fld"><label for="odo">Odometer terakhir</label><div class="inp"><input id="odo" type="number" inputmode="numeric" step="1000" min="0"><span class="u">km</span></div></div>
+    </div>
+    <div class="grid" id="otherBox" hidden>
+      <div class="fld"><label for="otherSeg">Kelas mobil</label><select id="otherSeg"><option value="city">Mobil kecil (hatchback)</option><option value="lmpv">MPV keluarga</option><option value="suv">SUV / crossover</option></select></div>
+      <div class="fld"><label for="otherValue">Taksiran harga jual hari ini</label><div class="inp"><input id="otherValue" type="number" inputmode="decimal" min="0"><span class="u">Rp juta</span></div><p class="hint">Cek di Moladin atau OLX untuk unit serupa.</p></div>
+    </div>
+    <p class="auto" id="autoInfo"></p>
+    <p class="note">Perawatan (ban, aki, servis), pajak, asuransi, dan harga jual kembali dihitung otomatis dari tahun dan odometer. Semua angkanya bisa Anda ubah di bagian "Asumsi" di bawah.</p>
+  </section>
+
+  <section class="ok" id="out" aria-live="polite">
+    <div class="card">
+      <div class="cardhead"><h2 id="sumTitle">5 pilihan mobil baru</h2><span class="note" id="sumNote"></span></div>
+      <p class="takeaway" id="takeaway"></p>
+      <div class="base" id="base"></div>
+      <h3 id="cat1Title"></h3>
+      <ul class="opts" id="opts"></ul>
+      <h3 id="cat2Title"></h3>
+      <p class="note" id="cat2Note"></p>
+      <ul class="opts" id="opts2"></ul>
+      <p class="note">Tiap kategori diurutkan dari yang paling hemat setelah dihitung selama masa pakai yang Anda rencanakan. Setiap kategori memuat minimal 3 mobil listrik dan 2 mobil bensin bila tersedia. Klik satu pilihan untuk melihat grafik dan rinciannya di bawah.</p>
+    </div>
+
+    <div class="card">
+      <div class="cardhead"><h2 id="detTitle">Detail</h2><span id="pill" class="pill warn">-</span></div>
+      <div class="stats" id="stats"></div>
+      <div class="insight" id="insight"></div>
+      <div class="legend"><span><i class="swatch dash"></i><span id="lgA">Tahan</span></span><span><i class="swatch b"></i><span id="lgB">Tukar</span></span></div>
+      <div class="chartbox"><svg id="chart" viewBox="0 0 720 340" role="img" aria-label="Grafik biaya bersih kumulatif tahan versus tukar"></svg></div>
+      <p class="note">Biaya bersih = nilai mobil yang hilang + semua biaya berjalan, dihitung sejak hari ini. Titik potong kedua garis adalah BEP. Garis titik-titik vertikal menandai lama rencana pakai.</p>
+      <div class="btnrow"><button id="copyBtn" class="b primary" type="button">Salin ringkasan</button><span class="toast" id="toast"></span></div>
+    </div>
+
+    <div class="card"><h2>Rincian biaya selama masa pakai</h2><div class="tscroll"><table id="breakdown"></table></div></div>
+    <div class="card"><h2>Perawatan terjadwal otomatis</h2><p class="note" id="maintNote"></p><div class="tscroll"><table id="maintTable"></table></div></div>
+    <div class="card"><h2>Biaya bersih per tahun</h2><div class="tscroll"><table id="yearly"></table></div></div>
+    <div class="card"><h2>Sensitivitas: BEP jika asumsi meleset</h2><p class="note">Untuk pilihan yang sedang dibuka. Baris: jarak tempuh per tahun. Kolom: penyusutan tahun pertama mobil baru. Tanda ✓ berarti BEP tercapai dalam masa pakai yang Anda tetapkan.</p><div class="tscroll"><table id="sens" class="sens"></table></div></div>
+  </section>
+
+  <section class="card" id="asumsi">
+    <div class="cardhead"><h2>Asumsi (bisa diubah manual)</h2><button class="b" id="resetBtn" type="button">Kembalikan ke bawaan</button></div>
+    <p class="note">Kolom yang dikosongkan memakai nilai otomatis (angka abu-abu di dalam kolom). Label <span class="tag src">S#</span> berarti ada sumber di tabel bawah, <span class="tag asm">asumsi</span> berarti angka bawaan yang perlu Anda cek.</p>
+
+    <details open>
+      <summary>Mobil lama</summary>
+      <div class="grid" id="fOld"></div>
+    </details>
+    <details open>
+      <summary>Mobil baru yang sedang dibuka: <span id="selName"></span></summary>
+      <div class="grid" id="fSel"></div>
+    </details>
+    <details>
+      <summary>Pemakaian, energi, dan keuangan</summary>
+      <div class="grid" id="fGen"></div>
+    </details>
+    <details>
+      <summary>Pajak dan asuransi</summary>
+      <div class="grid" id="fTax"></div>
+    </details>
+    <details>
+      <summary>Penyusutan (harga jual kembali)</summary>
+      <div class="grid" id="fDep"></div>
+    </details>
+    <details>
+      <summary>Jadwal dan biaya perawatan</summary>
+      <p class="note">Interval 0 berarti tidak dipakai. Item diganti saat salah satu interval (km atau bulan) tercapai. Untuk mobil lama, posisi terakhir penggantian diasumsikan pada kelipatan interval dari odometer dan usia mobil. Biaya dikalikan faktor kelas (kecil 0,85; MPV 1,0; SUV 1,2) dan inflasi perawatan.</p>
+      <h3>Mobil bensin (ICE)</h3><div class="tscroll"><table class="mt" id="tICE"></table></div>
+      <h3>Mobil listrik (EV)</h3><div class="tscroll"><table class="mt" id="tEV"></table></div>
+      <p class="note">Garansi baterai tidak dimodelkan sebagai biaya. Cek masa garansinya (Wuling Air EV: 8 tahun atau 120.000 km pada sumber S11) dan risiko setelah garansi habis.</p>
+    </details>
+    <details>
+      <summary>Cara perhitungan (rumus)</summary>
+      <div class="formula" id="formula"></div>
+    </details>
+  </section>
+
+  <section class="card" id="sumber">
+    <h2>Sumber dan cara memverifikasi</h2>
+    <p class="note">Buka tautan, bandingkan dengan angka di kolom "Dipakai", lalu ubah di bagian Asumsi bila berbeda. Harga, pajak, dan tarif berbeda per kota; gunakan angka lokal Anda bila ada. Data diambil per 19 Okt 2026.</p>
+    <div class="tscroll"><table class="srcT" id="srcTable"></table></div>
+  </section>
+
+  <footer>Alat bantu hitung, bukan nasihat keuangan. Hasil hanya sebaik asumsi yang dimasukkan. Input tersimpan di browser ini saja.</footer>
+</div>
+
+<script>
+//#CALC-START
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const N=(x,d)=>{const v=parseFloat(x);return isFinite(v)?v:(d==null?0:d);};
+const SEG_F={city:0.85,lmpv:1,suv:1.2};
+const SEG_LABEL={city:'mobil kecil',lmpv:'MPV keluarga',suv:'SUV/crossover'};
+const KMPL_SEG={city:16,lmpv:12.5,suv:12};
+
+/* Harga bekas per tahun produksi (Rp juta, titik tengah kisaran iklan, Moladin Okt 2026 kecuali dicatat) */
+const OLD={
+  xpander:{label:'Mitsubishi Xpander',seg:'lmpv',kmpl:12,anchors:[[2017,183],[2019,185],[2021,206],[2025,277],[2026,277]]},
+  avanza:{label:'Toyota Avanza',seg:'lmpv',kmpl:12.5,anchors:[[2008,82.5],[2013,116.5],[2017,140.5],[2021,228.5],[2026,240]]},
+  xenia:{label:'Daihatsu Xenia',seg:'lmpv',kmpl:12.5,anchors:[[2007,71.5],[2013,105],[2017.5,139],[2021.5,188.5],[2026,225]]},
+  ertiga:{label:'Suzuki Ertiga',seg:'lmpv',kmpl:13,anchors:[[2018,170],[2019,175],[2020,181],[2021,194],[2022,205],[2023,212],[2024,218],[2025,230]]},
+  brio:{label:'Honda Brio',seg:'city',kmpl:15,anchors:[[2018,110],[2019,117.5],[2020,127.5],[2021,133],[2022,140],[2023,150],[2024,160],[2025,165]]},
+  agya:{label:'Toyota Agya',seg:'city',kmpl:16,anchors:[[2015,97],[2020,140],[2021,162],[2025,185]]},
+  other:{label:'Lainnya (isi taksiran sendiri)',seg:null,kmpl:null,anchors:null}
+};
+/* Katalog mobil baru. price = OTR Rp juta; eff = km/liter (ICE) atau kWh/100 km (EV). */
+const POOL={
+  lmpv:[
+    {id:'xpander',name:'Mitsubishi Xpander GLS M/T',type:'ice',price:274.5,eff:12.5},
+    {id:'avanza',name:'Toyota Avanza (varian awal)',type:'ice',price:244.2,eff:13},
+    {id:'xenia',name:'Daihatsu Xenia (varian awal)',type:'ice',price:229.65,eff:13},
+    {id:'m6',name:'BYD M6 Standard',type:'ev',price:395,eff:16},
+    {id:'m6s',name:'BYD M6 Superior',type:'ev',price:435,eff:16},
+    {id:'darion',name:'Wuling Darion EV CE',type:'ev',price:399,eff:17},
+    {id:'d9',name:'Denza D9',type:'ev',price:950,eff:20}
+  ],
+  city:[
+    {id:'agya',name:'Toyota Agya (varian awal)',type:'ice',price:174.3,eff:17},
+    {id:'brio',name:'Honda Brio Satya S M/T',type:'ice',price:170.4,eff:16},
+    {id:'ayla',name:'Daihatsu Ayla (varian awal)',type:'ice',price:141.2,eff:18},
+    {id:'atto1',name:'BYD Atto 1 Standard',type:'ev',price:199,eff:11},
+    {id:'air',name:'Wuling Air EV Lite Standard Range',type:'ev',price:214,eff:10.4},
+    {id:'binguo',name:'Wuling BinguoEV Lite',type:'ev',price:318,eff:11},
+    {id:'dolphin',name:'BYD Dolphin Dynamic',type:'ev',price:369,eff:13}
+  ],
+  suv:[
+    {id:'rush',name:'Toyota Rush GR Sport',type:'ice',price:290.1,eff:12},
+    {id:'raize',name:'Toyota Raize G',type:'ice',price:243.5,eff:14},
+    {id:'yaris',name:'Toyota Yaris Cross',type:'ice',price:359.7,eff:14},
+    {id:'atto3',name:'BYD Atto 3 Advanced-Plus',type:'ev',price:415,eff:15.5},
+    {id:'cloud',name:'Wuling Cloud EV Lite',type:'ev',price:415,eff:14},
+    {id:'sealion7',name:'BYD Sealion 7 Extended',type:'ev',price:879,eff:17.5}
+  ]
+};
+Object.keys(POOL).forEach(k=>POOL[k].forEach(c=>{c.seg=k;}));
+const ICE_NAMES=['Servis berkala + oli + filter oli','Filter udara','Busi (set 4)','Filter bensin','Oli transmisi + pembersihan sistem BBM','Kampas rem depan','Kampas rem belakang','Ban (4 buah)','Aki','Servis AC','Shock absorber (set)','V-belt + flush radiator'];
+const EV_NAMES=['Servis berkala EV','Ban (4 buah)','Aki 12V','Kampas rem','Servis AC','Shock absorber (set)'];
+const DEF={
+  model:'xpander',year:2019,odo:90000,otherSeg:'lmpv',otherValue:150,
+  H:5,oldValue:'',kmYr:'',oldKmpl:'',oldIns:2,
+  opp:4,fuelInfl:4,elecInfl:2,maintInfl:5,fuelPreset:'15950',fuelPrice:15950,homePreset:'1444.7',homeTariff:1444.7,homeShare:70,spklu:2475,
+  pkbRate:2.1,njkb:80,swd:0.143,pkbFree:false,
+  ice_r1:15,ice_r2:7,ice_r3:4.5,ev_r1:35,ev_r2:15,ev_r3:10,odoAdj:0.8,
+  resICE:0.6,resEV:0.4,resCap:8,warranty:3,
+  sel:'',over:{},
+  mICE:[[0.7,10000,6],[0.15,20000,0],[0.6,40000,0],[0.3,40000,0],[1.0,40000,0],[0.5,35000,0],[0.4,60000,0],[3.2,45000,60],[0.9,0,30],[0.8,0,24],[4.0,80000,0],[0.9,60000,0]],
+  mEV:[[0.5,10000,12],[3.6,40000,60],[0.9,0,48],[0.5,80000,0],[0.8,0,24],[4.0,80000,0]]
+};
+
+function interp(a,x){
+  if(x<=a[0][0]){ const sl=(a[1][1]-a[0][1])/(a[1][0]-a[0][0]); return Math.max(35,a[0][1]+sl*(x-a[0][0])); }
+  for(let i=1;i<a.length;i++){ if(x<=a[i][0]){ const t=(x-a[i-1][0])/(a[i][0]-a[i-1][0]); return a[i-1][1]+t*(a[i][1]-a[i-1][1]); } }
+  return a[a.length-1][1];
+}
+function ratesOf(p,type){ return type==='ev'?[p.ev_r1/100,p.ev_r2/100,p.ev_r3/100]:[p.ice_r1/100,p.ice_r2/100,p.ice_r3/100]; }
+function depSchedule(P0,ageM0,r,months){
+  const v=new Float64Array(months+1); v[0]=P0;
+  for(let m=1;m<=months;m++){
+    const ay=(ageM0+m-1)/12, rate=ay<1?r[0]:(ay<4?r[1]:r[2]);
+    v[m]=v[m-1]*Math.pow(1-rate,1/12);
+  }
+  return v;
+}
+function derive(p){
+  const m=OLD[p.model]||OLD.xpander;
+  const year=clamp(Math.round(N(p.year,2019)),1990,2026);
+  const ageM0=Math.max(3,Math.round((2026.3-year)*12)), ageY=ageM0/12;
+  const odo=Math.max(0,N(p.odo));
+  const kmAuto=clamp(Math.round(odo/ageY/500)*500,6000,35000);
+  const seg=m.seg||p.otherSeg;
+  let base, adj=0;
+  if(m.anchors){ base=interp(m.anchors,year); adj=clamp(-N(p.odoAdj)/100*(odo-15000*ageY)/10000,-0.10,0.10); }
+  else base=N(p.otherValue);
+  const valueAuto=base*(1+adj);
+  const kmplAuto=m.kmpl||KMPL_SEG[seg];
+  const value=N(p.oldValue)>0?N(p.oldValue):valueAuto;
+  const kmYr=N(p.kmYr)>0?N(p.kmYr):kmAuto;
+  const kmpl=N(p.oldKmpl)>0?N(p.oldKmpl):kmplAuto;
+  return {m,year,ageM0,ageY,odo,kmAuto,seg,base,adj,valueAuto,kmplAuto,value,kmYr,kmpl,name:m.label==='Lainnya (isi taksiran sendiri)'?('Mobil lama '+year):(m.label+' '+year)};
+}
+function itemsOf(p,type){ const names=type==='ev'?EV_NAMES:ICE_NAMES, arr=type==='ev'?p.mEV:p.mICE; return names.map((n,i)=>({name:n,cost:N(arr[i][0]),km:N(arr[i][1]),mo:N(arr[i][2])})); }
+function oldSpec(p,d){
+  return {name:d.name,type:'ice',P0:d.value*1e6,ageM0:d.ageM0,odo0:d.odo,eff:d.kmpl,ins:N(p.oldIns)/100,fees:0,
+    rates:ratesOf(p,'ice'),items:itemsOf(p,'ice'),segF:SEG_F[d.seg],warranty:0,resPer:N(p.resICE),resCap:N(p.resCap),pkbFree:false};
+}
+function candSpec(p,d,cand,o){
+  const ov=(p.over&&p.over[cand.id])||{};
+  const price=ov.price!=null?N(ov.price):cand.price, eff=ov.eff!=null?N(ov.eff):cand.eff;
+  const fees=ov.fees!=null?N(ov.fees):(cand.type==='ev'?8:0), ins=ov.ins!=null?N(ov.ins):2.5;
+  const rates=ratesOf(p,cand.type); if(o&&o.bd1!=null) rates[0]=o.bd1;
+  return {name:cand.name,id:cand.id,type:cand.type,P0:price*1e6,ageM0:0,odo0:0,eff,ins:ins/100,fees:fees*1e6,rates,
+    items:itemsOf(p,cand.type),segF:SEG_F[cand.seg||d.seg],warranty:N(p.warranty),resPer:N(cand.type==='ev'?p.resEV:p.resICE),resCap:N(p.resCap),pkbFree:!!p.pkbFree};
+}
+function shared(p,d,o){
+  return {km:(o&&o.km!=null)?o.km:d.kmYr,opp:N(p.opp),fuelPrice:N(p.fuelPrice),fuelInfl:N(p.fuelInfl),elecInfl:N(p.elecInfl),maintInfl:N(p.maintInfl),
+    homeTariff:N(p.homeTariff),homeShare:N(p.homeShare),spklu:N(p.spklu),pkbRate:N(p.pkbRate),njkb:N(p.njkb),swd:N(p.swd)};
+}
+function simCar(c,s,months){
+  const n=months+1, mk=()=>new Float64Array(n);
+  const comp={dep:mk(),energy:mk(),maint:mk(),reserve:mk(),tax:mk(),ins:mk(),opp:mk(),fees:mk()}, tot=mk(), events=[];
+  comp.fees.fill(c.fees); tot[0]=c.fees;
+  const val=depSchedule(c.P0,c.ageM0,c.rates,months);
+  const elec=(s.homeShare/100)*s.homeTariff+(1-s.homeShare/100)*s.spklu;
+  const its=c.items.map(it=>({name:it.name,cost:it.cost*1e6*c.segF,km:it.km,mo:it.mo,ks:it.km>0?c.odo0%it.km:0,ts:it.mo>0?c.ageM0%it.mo:0}));
+  const kmM=s.km/12;
+  for(let m=1;m<=months;m++){
+    const y=Math.floor((m-1)/12), infl=Math.pow(1+s.maintInfl/100,y);
+    let e;
+    if(c.type==='ev') e=kmM*(c.eff/100)*elec*Math.pow(1+s.elecInfl/100,y);
+    else e=kmM/Math.max(c.eff,0.1)*s.fuelPrice*Math.pow(1+s.fuelInfl/100,y);
+    let mt=0;
+    for(const it of its){
+      it.ks+=kmM; it.ts+=1;
+      if((it.km>0&&it.ks>=it.km)||(it.mo>0&&it.ts>=it.mo)){ const cst=it.cost*infl; mt+=cst; events.push({m,name:it.name,cost:cst}); it.ks=0; it.ts=0; }
+    }
+    const ageYrs=(c.ageM0+m)/12;
+    const rs=(m<=c.warranty*12)?0:Math.min(c.resCap,c.resPer*ageYrs)*1e6/12;
+    const pkb=(c.pkbFree&&c.type==='ev')?0:(s.pkbRate/100)*(s.njkb/100)*val[12*y];
+    comp.energy[m]=comp.energy[m-1]+e;
+    comp.maint[m]=comp.maint[m-1]+mt;
+    comp.reserve[m]=comp.reserve[m-1]+rs;
+    comp.tax[m]=comp.tax[m-1]+(pkb+s.swd*1e6)/12;
+    comp.ins[m]=comp.ins[m-1]+c.ins*val[m-1]/12;
+    comp.opp[m]=comp.opp[m-1]+(s.opp/100)*val[m-1]/12;
+    comp.dep[m]=c.P0-val[m];
+    tot[m]=comp.fees[m]+comp.dep[m]+comp.energy[m]+comp.maint[m]+comp.reserve[m]+comp.tax[m]+comp.ins[m]+comp.opp[m];
+  }
+  return {tot,comp,events,val};
+}
+function findBEP(tA,tB){
+  const d=m=>tA[m]-tB[m];
+  let prev=d(0);
+  if(prev>0) return 0;
+  let neg=prev<0;
+  for(let m=1;m<tA.length;m++){
+    const cur=d(m);
+    if(cur<0) neg=true;
+    else if(neg){ return (m-1)+(-prev)/(cur-prev); }
+    else if(cur>0) return 0;
+    prev=cur;
+  }
+  return null;
+}
+function pair(p,cand,o){
+  const d=derive(p), s=shared(p,d,o), months=180;
+  const A=simCar(oldSpec(p,d),s,months), B=simCar(candSpec(p,d,cand,o),s,months);
+  return {d,s,A,B};
+}
+function thresholdD1(p,cand,Hm){
+  const f=x=>{const r=pair(p,cand,{bd1:x});return r.B.tot[Hm]-r.A.tot[Hm];};
+  if(f(0)>0) return {none:true};
+  if(f(0.9)<0) return {over:true};
+  let lo=0,hi=0.9;
+  for(let i=0;i<30;i++){const mid=(lo+hi)/2; if(f(mid)<0) lo=mid; else hi=mid;}
+  return {v:lo};
+}
+function pickTop(list,n,evMin,iceMin){
+  const sorted=list.slice().sort((x,y)=>y.diff-x.diff), chosen=[];
+  const take=(arr,k)=>{ for(const x of arr){ if(k<=0) break; if(!chosen.includes(x)){ chosen.push(x); k--; } } };
+  take(sorted.filter(x=>x.cand.type==='ev'),evMin);
+  take(sorted.filter(x=>x.cand.type==='ice'),iceMin);
+  take(sorted,n-chosen.length);
+  return chosen.sort((x,y)=>y.diff-x.diff);
+}
+function rankAll(p){
+  const d=derive(p), s=shared(p,d), months=180, Hm=clamp(Math.round(N(p.H,5)),1,15)*12;
+  const A=simCar(oldSpec(p,d),s,months);
+  const evalC=c=>{
+    const cs=candSpec(p,d,c), B=simCar(cs,s,months);
+    return {cand:c,B,price:cs.P0/1e6,bep:findBEP(A.tot,B.tot),diff:A.tot[Hm]-B.tot[Hm],total:B.tot[Hm],perMonth:B.tot[Hm]/Hm,resale:B.val[Hm]};
+  };
+  const otherSegs=Object.keys(POOL).filter(k=>k!==d.seg);
+  const same=POOL[d.seg].map(evalC);
+  const other=otherSegs.flatMap(k=>POOL[k]).map(evalC);
+  const top=pickTop(same,5,3,2), topOther=pickTop(other,5,3,2);
+  return {d,s,A,same,other,top,topOther,otherSegs,all:same.concat(other),Hm};
+}
+//#CALC-END
+
+const SRC=[
+ {id:1,name:'Harga BBM Pertamina Okt 2026',used:'Pertalite Rp10.000, Pertamax Rp15.950, Pertamax Green Rp19.150 per liter',links:[['Investortrust, BBM Okt 2026','https://investortrust.id/business/117985/daftar-lengkap-harga-bbm-pertamina-oktober-2026'],['Bisnis.com, 16 Okt 2026','https://ekonomi.bisnis.com/read/20261016/44/2013092/update-daftar-harga-bbm-di-seluruh-spbu-berlaku-per-16-oktober-2026']],note:'Daftar iNews memuat beberapa angka Pertamax (Rp14.950 sampai Rp16.650), kemungkinan per wilayah. Cek harga SPBU kota Anda.'},
+ {id:2,name:'Tarif listrik PLN dan SPKLU',used:'Rumah: Rp1.444,70/kWh (1.300-2.200 VA), Rp1.699,53/kWh (3.500 VA ke atas). SPKLU: Rp2.475/kWh (rentang aturan Rp1.650-2.475).',links:[['Kompas TV, tarif Jul-Sep 2026','https://www.kompas.tv/info-publik/680581/tarif-listrik-per-kwh-16-19-juli-2026-tetap-berikut-daftar-lengkap-seluruh-golongan'],['Okezone, tarif SPKLU 2026','https://www.rctiplus.com/news/detail/okezone/5343306/segini-tarif-cas-mobil-listrik-di-spklu-tol-untuk-mudik-lebaran-2026']],note:'Tarif PLN yang ditemukan berlaku Jul-Sep 2026; cek triwulan IV di PLN Mobile. Fast charging dapat dikenai biaya tambahan hingga Rp25.000 per sesi, tidak dihitung terpisah.'},
+ {id:3,name:'Aturan pajak EV (Permendagri 11/2026)',used:'PKB EV tidak lagi otomatis nol; insentif ditentukan pemda. PPN DTP EV berakhir akhir 2025.',links:[['Detik Finance, aturan pajak EV','https://finance.detik.com/berita-ekonomi-bisnis/d-8454900/mobil-motor-listrik-tak-lagi-bebas-pajak-ini-aturannya'],['Kabar Bursa, surat edaran Mendagri','https://www.kabarbursa.com/otomotif/pajak-ev-tak-lagi-nol-konsumen-mulai-berpikir-ulang']],note:'Besaran dan insentif per daerah belum tentu ada di sumber. Centang "bebas PKB" bila pemda Anda membebaskan.'},
+ {id:4,name:'Rumus PKB dan SWDKLLJ',used:'PKB 2% x (NJKB + 5%) + SWDKLLJ Rp143.000 (contoh Jakarta). NJKB Rush Rp224-242 jt untuk harga baru sekitar Rp290 jt, sehingga dipakai NJKB sekitar 80% nilai mobil. Rumus dipakai: 2,1% x 80% x nilai mobil.',links:[['Detik Oto, pajak Toyota Rush 2026','https://oto.detik.com/mobil/d-8514206/pajak-toyota-rush-keluaran-tahun-2026'],['Pajakku, perkiraan pajak EV 2026','https://pajakku.com/artikel/perkiraan-pajak-mobil-listrik-wuling-byd-dan-jaecoo-2026']],note:'Tarif PKB dan opsen berbeda per provinsi (sumber memakai Jakarta). Cek SAMSAT daerah Anda atau STNK.'},
+ {id:5,name:'Harga mobil baru ICE',used:'Xpander GLS M/T Rp274,5 jt; Avanza Rp244,2 jt; Xenia mulai Rp229,65 jt; Rush GR Sport Rp290,1 jt; Raize G Rp243,5 jt; Yaris Cross Rp359,7 jt; Agya mulai Rp174,3 jt; Brio Satya S M/T Rp170,4 jt; Ayla mulai Rp141,2 jt',links:[['ZigWheels, Xpander','https://www.zigwheels.co.id/mobil/mitsubishi-xpander/'],['Moladin, OTR Toyota Okt 2026','https://moladin.com/news/harga-otr-toyota-oktober-2026/'],['Moladin, harga Daihatsu Sep 2026','https://moladin.com/news/harga-daihatsu-september-2026/2/'],['ZigWheels, Honda Brio','https://www.zigwheels.co.id/mobil-baru/honda1/']],note:'Sebagian angka adalah harga mulai (varian termurah) dan OTR Jakarta; harga dealer di kota Anda dapat berbeda. Gunakan "Mobil baru yang sedang dibuka" untuk mengubah harga.'},
+ {id:6,name:'Harga mobil baru EV',used:'BYD M6 Standard Rp395 jt; Atto 1 Standard Rp199 jt; Dolphin Dynamic Rp369 jt; Atto 3 Rp415 jt; Sealion 7 Rp879 jt; Wuling Air EV Lite SR Rp214 jt; BinguoEV Lite Rp318 jt; Cloud EV Lite Rp415 jt; Darion EV CE Rp399 jt; Denza D9 sekitar Rp950 jt',links:[['Moladin, OTR BYD Okt 2026','https://moladin.com/news/harga-otr-byd-oktober-2026/?show_all=1'],['OtoDriver, harga Wuling Feb 2026','https://otodriver.com/daftar-harga/2026/daftar-harga-wuling-terbaru-februari-2026-dafedhcb026'],['Moladin, harga MPV listrik Jun 2026','https://moladin.com/news/harga-mpv-listrik-juni-2026/']],note:'Sumber BYD menyebut rentang data Feb 2025 sampai Agu 2026 dan angka M6 yang tidak seragam. Konsumsi kWh/100 km kecuali Air EV (turunan Rp150/km dari artikel Moladin 2022) adalah asumsi kelas; 58 kWh per 450 km pada BYD M6 setara 12,9 kWh/100 km pada uji lab.'},
+ {id:7,name:'Harga mobil bekas per tahun',used:'Titik tengah kisaran iklan per tahun produksi. Xpander 2017-2019 Rp183-185 jt, 2021 Rp206 jt, 2025 Rp277 jt. Avanza: 2005-10 Rp82,5 jt; 2011-15 Rp116,5 jt; 2016-18 Rp140,5 jt; 2019-23 Rp228,5 jt. Xenia: Rp71,5 / 105 / 139 / 188,5 jt. Brio 2018 Rp110 jt sampai 2025 Rp165 jt. Ertiga dan Agya: rata-rata varian dari tabel Moladin.',links:[['Moladin, Xpander bekas Okt 2026','https://moladin.com/news/harga-xpander-bekas-oktober-2026/?show_all=1'],['Moladin, Avanza & Xenia bekas Okt 2026','https://moladin.com/news/harga-avanza-dan-xenia-bekas-oktober-2026/?show_all=1'],['Moladin, Brio bekas Okt 2026','https://moladin.com/news/harga-honda-brio-bekas-oktober-2026/?show_all=1'],['Moladin, Ertiga bekas 2026','https://moladin.com/news/daftar-harga-mobil-ertiga-second-2026/'],['Moladin, Agya bekas 2026','https://moladin.com/news/harga-mobil-agya-bekas-2026/']],note:'Angka adalah iklan, bukan harga transaksi. Antar titik tahun dihitung linear (interpolasi); Avanza dan Xenia hanya punya kisaran kelompok tahun. Penyesuaian odometer (-0,8% tiap 10.000 km di atas rata-rata 15.000 km/tahun, maksimal 10%) adalah asumsi. Selalu cek unit Anda di marketplace.'},
+ {id:8,name:'Penyusutan (depresiasi)',used:'ICE & hybrid 10-15%/tahun (OLXmobbi); BEV 35-60%/tahun; EV subsidi turun sekitar 35% tahun pertama vs 20-25% mobil konvensional (JBA). Bawaan: ICE 15% / 7% / 4,5%; EV 35% / 15% / 10% (tahun 1 / tahun 2-4 / tahun 5 ke atas).',links:[['Warta Ekonomi, data OLXmobbi','https://wartaekonomi.co.id/read584680/temuan-skena-otomotif-harga-mobil-listrik-disebut-angka-depresiasi-lebih-besar-sebabnya-ini'],['OtoDriver, data JBA Indonesia','https://otodriver.com/berita/2024/harga-jual-kembali-mobil-listrik-anjlok-ternyata-ini-beberapa-penyebabnya-hardegbfnya'],['Detik Oto, penurunan hingga 50%','https://oto.detik.com/mobil/d-8083494/duh-penurunan-harga-mobil-listrik-bekas-bisa-capai-50-persen'],['Kabar Bursa, harga EV bekas naik 7,4% (Jun 2026)','https://www.kabarbursa.com/otomotif/harga-mobil-listrik-bekas-naik-hingga-74-persen-merek-mana-paling-mahal']],note:'Laju ICE tahun 2-4 dan 5+ dikalibrasi kasar dari selisih harga bekas Xpander per tahun produksi (sekitar 7% dan 4%/tahun). Ini asumsi dengan dampak terbesar pada hasil.'},
+ {id:9,name:'Biaya servis dan komponen mobil bensin',used:'Servis 10.000 km: Rp600-800 rb; ban Rp600rb-1 jt per buah tiap 40-50 rb km; aki 2-3 tahun, Rp0,69-1,02 jt (Okt 2026); kampas rem depan Rp400-600 rb tiap 30-40 rb km; busi, filter, oli transmisi sesuai tabel.',links:[['Kabar Bursa, estimasi perawatan Avanza (2024)','https://www.kabarbursa.com/market-hari-ini/estimasi-biaya-perawatan-mobil-sejuta-umat'],['Moladin, harga aki Okt 2026','https://moladin.com/news/daftar-harga-aki-mobil-oktober-2026/?show_all=1']],note:'Harga servis dari artikel Juni 2024 (Avanza). Servis AC, shock absorber, V-belt, interval kampas belakang, dan cadangan perbaikan tak terduga adalah asumsi. Kelas mobil mengalikan biaya.'},
+ {id:10,name:'Biaya servis dan garansi EV',used:'Servis berkala EV sekitar Rp0,5 jt per 10.000 km (Wuling Cloud EV: Rp5,4 jt per 105.000 km; Air EV sekitar Rp4 jt per 100.000 km). Garansi baterai Wuling Air EV 8 tahun/120.000 km.',links:[['Detik Oto, servis Wuling Cloud EV','https://oto.detik.com/mobil-listrik/d-7342595/segini-biaya-servis-wuling-cloud-ev-selama-100-ribu-kilometer'],['Moladin, mobil listrik vs bensin (2022)','https://moladin.com/news/mobil-listrik-vs-bensin/']],note:'Ban EV, aki 12V, kampas rem, AC, dan shock absorber adalah asumsi. Biaya penggantian baterai di luar garansi belum dipublikasikan; tidak dimodelkan.'}
+];
+const S=n=>`<a class="tag src" href="#s${n}">S${n}</a>`;
+const ASM='<span class="tag asm">asumsi</span>';
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nf=new Intl.NumberFormat('id-ID',{maximumFractionDigits:1,minimumFractionDigits:0});
+function rp(x){ const a=Math.abs(x), sg=x<0?'-':''; if(a>=1e9) return sg+'Rp'+nf.format(a/1e9)+' M'; return sg+'Rp'+nf.format(a/1e6)+' jt'; }
+function dur(m){ if(m==null) return null; let y=Math.floor(m/12), mo=Math.round(m%12); if(mo===12){y++;mo=0;} if(y===0&&mo===0) return 'sejak awal'; return (y?y+' th ':'')+(mo?mo+' bln':''); }
+
+/* ---------- form builders ---------- */
+function fld(id,label,unit,o){ o=o||{};
+  return `<div class="fld"><label for="${id}">${label}${o.tag||''}</label><div class="inp"><input id="${id}" type="number" inputmode="decimal" step="${o.step||'any'}" min="${o.min!=null?o.min:0}"${o.ph?` placeholder="${o.ph}"`:''}><span class="u">${unit}</span></div>${o.hint?`<p class="hint">${o.hint}</p>`:''}</div>`; }
+function buildForms(){
+  $('model').innerHTML=Object.entries(OLD).map(([k,v])=>`<option value="${k}">${esc(v.label)}</option>`).join('');
+  $('fOld').innerHTML=
+    fld('oldValue','Nilai pasar mobil lama (kosong = otomatis)','Rp juta',{tag:S(7),hint:'Taksiran jika dijual hari ini.'})+
+    fld('kmYr','Jarak tempuh (kosong = otomatis)','km/tahun',{tag:ASM,hint:'Otomatis = odometer dibagi usia mobil.'})+
+    fld('oldKmpl','Konsumsi BBM (kosong = otomatis)','km/liter',{tag:ASM,hint:'Pakai catatan isi tangki Anda.'})+
+    fld('oldIns','Asuransi mobil lama','% nilai mobil/th',{tag:ASM})+
+    fld('odoAdj','Koreksi harga per 10.000 km di atas rata-rata','% turun',{tag:ASM,hint:'Rata-rata dianggap 15.000 km per tahun usia.'});
+  $('fSel').innerHTML=
+    fld('sel_price','Harga OTR','Rp juta',{tag:S(5)+S(6)})+
+    fld('sel_eff','Konsumsi','km/liter atau kWh/100 km',{tag:ASM,hint:'Bensin: km/liter. Listrik: kWh per 100 km, termasuk rugi pengisian.'})+
+    fld('sel_fees','Biaya awal tambahan','Rp juta',{tag:ASM,hint:'Wallbox dan instalasi listrik (EV) atau aksesori. OTR sudah termasuk BBN.'})+
+    fld('sel_ins','Asuransi','% nilai mobil/th',{tag:ASM});
+  $('fGen').innerHTML=
+    fld('H','Rencana dipakai sebelum ganti lagi','tahun',{step:'1',min:1,hint:'1 sampai 15.'})+
+    `<div class="fld"><label for="fuelPreset">Jenis BBM ${S(1)}</label><select id="fuelPreset"><option value="10000">Pertalite Rp10.000</option><option value="15950">Pertamax Rp15.950</option><option value="19150">Pertamax Green Rp19.150</option><option value="custom">Isi sendiri</option></select></div>`+
+    fld('fuelPrice','Harga BBM','Rp/liter',{tag:S(1),hint:'Beda per wilayah.'})+
+    `<div class="fld"><label for="homePreset">Daya listrik rumah ${S(2)}</label><select id="homePreset"><option value="1444.7">1.300 sampai 2.200 VA</option><option value="1699.53">3.500 VA ke atas</option><option value="custom">Isi sendiri</option></select></div>`+
+    fld('homeTariff','Tarif listrik rumah','Rp/kWh',{tag:S(2)})+
+    fld('homeShare','Porsi cas di rumah','%',{tag:ASM,hint:'Sisanya di SPKLU umum.'})+
+    fld('spklu','Tarif SPKLU umum','Rp/kWh',{tag:S(2)})+
+    fld('fuelInfl','Kenaikan harga BBM','% per tahun',{tag:ASM})+
+    fld('elecInfl','Kenaikan tarif listrik','% per tahun',{tag:ASM})+
+    fld('maintInfl','Kenaikan biaya perawatan','% per tahun',{tag:ASM})+
+    fld('opp','Biaya peluang dana','% per tahun',{tag:ASM,hint:'Bunga yang hilang karena uang tertanam di mobil. Isi 0 untuk mengabaikan.'});
+  $('fTax').innerHTML=
+    fld('pkbRate','Tarif efektif PKB','% dari NJKB',{tag:S(4),hint:'2% x 1,05 sesuai rumus sumber. Berbeda per provinsi.'})+
+    fld('njkb','NJKB sebagai % nilai mobil','%',{tag:S(4)})+
+    fld('swd','SWDKLLJ','Rp juta/th',{tag:S(4)})+
+    `<div class="fld"><label class="chk"><input type="checkbox" id="pkbFree"><span>Daerah saya membebaskan PKB mobil listrik ${S(3)}</span></label><p class="hint">Bila dicentang, EV hanya membayar SWDKLLJ.</p></div>`+
+    fld('resICE','Cadangan perbaikan tak terduga ICE','Rp juta per tahun usia',{tag:ASM,hint:'Naik sesuai usia mobil sampai batas maksimum.'})+
+    fld('resEV','Cadangan perbaikan tak terduga EV','Rp juta per tahun usia',{tag:ASM})+
+    fld('resCap','Batas maksimum cadangan','Rp juta/th',{tag:ASM})+
+    fld('warranty','Bebas cadangan (garansi) mobil baru','tahun',{tag:ASM,step:'1'});
+  $('fDep').innerHTML=
+    fld('ice_r1','ICE: susut tahun pertama','%',{tag:S(8)})+fld('ice_r2','ICE: susut tahun ke 2-4','% per tahun',{tag:S(8)})+fld('ice_r3','ICE: susut tahun ke 5 ke atas','% per tahun',{tag:S(8)})+
+    fld('ev_r1','EV: susut tahun pertama','%',{tag:S(8)})+fld('ev_r2','EV: susut tahun ke 2-4','% per tahun',{tag:S(8)})+fld('ev_r3','EV: susut tahun ke 5 ke atas','% per tahun',{tag:S(8)});
+  const tbl=(names,pref)=>`<tr><th>Item</th><th>Biaya (Rp juta)</th><th>Interval km</th><th>Interval bulan</th></tr>`+names.map((n,i)=>`<tr><td>${esc(n)}</td><td><input type="number" step="any" min="0" id="${pref}_${i}_0"></td><td><input type="number" step="any" min="0" id="${pref}_${i}_1"></td><td><input type="number" step="any" min="0" id="${pref}_${i}_2"></td></tr>`).join('');
+  $('tICE').innerHTML=tbl(ICE_NAMES,'mI'); $('tEV').innerHTML=tbl(EV_NAMES,'mE');
+}
+
+/* ---------- state ---------- */
+let state=JSON.parse(JSON.stringify(DEF));
+const KEY='kalkulator-bep-mobil-v2';
+const SCALAR=Object.keys(DEF).filter(k=>!['sel','over','mICE','mEV'].includes(k));
+const BLANKOK=['oldValue','kmYr','oldKmpl'];
+function load(){ try{ const r=localStorage.getItem(KEY); if(!r) return; const o=JSON.parse(r);
+  SCALAR.forEach(k=>{ if(k in o && typeof o[k]===typeof DEF[k]) state[k]=o[k]; else if(BLANKOK.includes(k)&&k in o&&(typeof o[k]==='number'||o[k]==='')) state[k]=o[k]; });
+  if(typeof o.sel==='string') state.sel=o.sel;
+  if(o.over&&typeof o.over==='object') state.over=o.over;
+  ['mICE','mEV'].forEach(k=>{ if(Array.isArray(o[k])&&o[k].length===DEF[k].length) state[k]=o[k]; });
+}catch(e){} }
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(state)); }catch(e){} }
+function pushToDom(){
+  SCALAR.forEach(k=>{ const el=$(k); if(!el) return; if(el.type==='checkbox') el.checked=!!state[k]; else el.value=state[k]; });
+  state.mICE.forEach((r,i)=>r.forEach((v,j)=>{ $('mI_'+i+'_'+j).value=v; }));
+  state.mEV.forEach((r,i)=>r.forEach((v,j)=>{ $('mE_'+i+'_'+j).value=v; }));
+}
+function pullScalar(el){
+  const k=el.id; if(el.type==='checkbox'){ state[k]=el.checked; return; }
+  if(el.type==='number'){ if(el.value===''&&BLANKOK.includes(k)){ state[k]=''; return; } const v=parseFloat(el.value); state[k]=isFinite(v)?v:0; }
+  else state[k]=el.value;
+}
+function params(){ const p=Object.assign({},state); p.H=clamp(Math.round(N(state.H,5))||1,1,15); return p; }
+
+/* ---------- render ---------- */
+let R=null;
+function selCand(){ return R.all.find(x=>x.cand.id===state.sel)||R.top[0]; }
+function render(){
+  const p=params(); R=rankAll(p);
+  const d=R.d, H=p.H, Hm=R.Hm;
+  if(!R.top.concat(R.topOther).some(x=>x.cand.id===state.sel)) state.sel=R.top[0].cand.id;
+  $('otherBox').hidden=state.model!=='other';
+  $('oldValue').placeholder=nf.format(d.valueAuto); $('kmYr').placeholder=nf.format(d.kmAuto); $('oldKmpl').placeholder=nf.format(d.kmplAuto);
+  $('autoInfo').innerHTML=`Usia sekitar <b>${nf.format(Math.round(d.ageY*10)/10)} tahun</b>, rata-rata <b>${nf.format(d.kmAuto)} km/tahun</b>, kelas <b>${SEG_LABEL[d.seg]}</b>. Taksiran nilai pasar hari ini <b>Rp${nf.format(Math.round(d.value))} jt</b>${d.m.anchors?` (harga bekas Moladin Okt 2026 ${S(7)}${d.adj?`, koreksi odometer ${nf.format(Math.round(d.adj*1000)/10)}%`:''})`:' (isian Anda)'}.`;
+
+  // ringkasan
+  const sel=selCand();
+  $('sumTitle').textContent='Pilihan mobil baru pengganti '+d.name;
+  $('sumNote').textContent=`Rencana dipakai ${H} tahun, ${nf.format(d.kmYr)} km/tahun`;
+  const shown=R.top.concat(R.topOther), best=shown.slice().sort((a,b)=>b.diff-a.diff)[0], within=shown.filter(x=>x.bep!=null&&x.bep<=Hm).sort((a,b)=>a.bep-b.bep);
+  $('takeaway').innerHTML = within.length
+    ? `Yang paling cepat impas: <b>${esc(within[0].cand.name)}</b> dalam <b>${esc(dur(within[0].bep))}</b>. Yang paling hemat dalam ${H} tahun: <b>${esc(best.cand.name)}</b>.`
+    : `Dengan asumsi saat ini, belum ada pilihan yang impas dalam ${H} tahun. Menahan ${esc(d.name)} masih lebih hemat; pilihan terdekat adalah <b>${esc(best.cand.name)}</b>.`;
+  const mEv=R.A.events.filter(e=>e.m<=12), mTot=mEv.reduce((a,e)=>a+e.cost,0);
+  $('base').innerHTML=`<div class="t">Tahan ${esc(d.name)} (acuan)</div><div class="note">Biaya bersih ${H} tahun <b>${rp(R.A.tot[Hm])}</b> (${rp(R.A.tot[Hm]/Hm)} per bulan). Perkiraan nilai jual di tahun ke-${H}: <b>${rp(R.A.val[Hm])}</b>. Perawatan 12 bulan ke depan: <b>${rp(mTot)}</b>${mEv.length?' ('+esc(Object.entries(mEv.reduce((o,e)=>{o[e.name]=(o[e.name]||0)+1;return o;},{})).map(([n,c])=>n+(c>1?' x'+c:'')).join(', '))+')':''}.</div>`;
+  const optRow=(x,i,showSeg)=>{
+    const on=x.cand.id===sel.cand.id, within=x.bep!=null&&x.bep<=Hm;
+    const bepTxt=x.bep==null?'Tidak impas dalam 15 th':(x.bep===0?'Langsung hemat':dur(x.bep));
+    const dcls=x.diff>=0?'good':'bad';
+    return `<li><button type="button" class="opt${on?' on':''}" data-id="${x.cand.id}" aria-pressed="${on}">
+      <div class="oname"><span class="rank">${i+1}</span><div><div class="n">${esc(x.cand.name)}</div><div class="sub"><span class="pillT ${x.cand.type}">${x.cand.type==='ev'?'EV':'ICE'}</span>OTR ${rp(x.price*1e6)}${showSeg?' · '+esc(SEG_LABEL[x.cand.seg]):''}</div></div></div>
+      <div class="cell"><div class="k">BEP</div><div class="v big ${within?'good':(x.bep==null?'bad':'warn')}">${esc(bepTxt)}</div></div>
+      <div class="cell"><div class="k">${H} th dibanding tahan</div><div class="v ${dcls}">${x.diff>=0?'hemat ':'boros '}${rp(Math.abs(x.diff))}</div></div>
+      <div class="cell"><div class="k">Biaya bersih per bulan</div><div class="v">${rp(x.perMonth)}</div></div>
+      <div class="cell"><div class="k">Nilai jual di tahun ${H}</div><div class="v">${rp(x.resale)}</div></div>
+    </button></li>`; };
+  $('cat1Title').textContent='Kategori 1: kelas yang sama ('+SEG_LABEL[d.seg]+')';
+  $('cat2Title').textContent='Kategori 2: ganti kelas ('+R.otherSegs.map(k=>SEG_LABEL[k]).join(' atau ')+')';
+  $('cat2Note').textContent='Opsi lebih luas jika Anda mau pindah tipe, misalnya dari MPV ke SUV atau turun ke mobil yang lebih kecil dan murah. Biaya perawatan mengikuti kelas masing-masing mobil.';
+  $('opts').innerHTML=R.top.map((x,i)=>optRow(x,i,false)).join('');
+  $('opts2').innerHTML=R.topOther.map((x,i)=>optRow(x,i,true)).join('');
+
+  // detail
+  const B=sel.B, A=R.A, tA=A.tot, tB=B.tot, bep=sel.bep, diffH=sel.diff;
+  const nameA=d.name, nameB=sel.cand.name;
+  $('detTitle').textContent='Detail: '+nameB;
+  $('selName').textContent=nameB;
+  $('lgA').textContent='Tahan: '+nameA; $('lgB').textContent='Tukar: '+nameB;
+  const within2=bep!=null&&bep<=Hm, slim=Math.abs(diffH)<0.08*Math.max(tA[Hm],1);
+  const pill=$('pill');
+  if(within2){pill.className='pill good';pill.textContent='Layak ditukar';}
+  else if(slim){pill.className='pill warn';pill.textContent='Selisih tipis';}
+  else {pill.className='pill bad';pill.textContent='Lebih hemat tahan';}
+  const cs=candSpec(p,d,sel.cand);
+  const cashNeed=cs.P0+cs.fees-d.value*1e6;
+  const runSav=(A.comp.energy[12]+A.comp.maint[12]+A.comp.reserve[12]+A.comp.tax[12]+A.comp.ins[12])-(B.comp.energy[12]+B.comp.maint[12]+B.comp.reserve[12]+B.comp.tax[12]+B.comp.ins[12]);
+  const cashPay=runSav>0?cashNeed/runSav:null;
+  $('stats').innerHTML=`
+    <div class="stat"><div class="k">BEP</div><div class="v">${bep==null?'tidak impas dalam 15 th':(bep===0?'sejak hari pertama':dur(bep))}</div></div>
+    <div class="stat"><div class="k">Selisih biaya bersih ${H} tahun (tukar lawan tahan)</div><div class="v ${diffH>=0?'good':'bad'}">${diffH>=0?'hemat ':'boros '}${rp(Math.abs(diffH))}</div></div>
+    <div class="stat"><div class="k">Dana tambahan di awal (harga baru + biaya awal - jual mobil lama)</div><div class="v">${rp(cashNeed)}</div></div>
+    <div class="stat"><div class="k">Hemat biaya berjalan tahun 1 (energi, perawatan, pajak, asuransi)</div><div class="v">${rp(runSav)}</div></div>
+    <div class="stat"><div class="k">Balik modal kas sederhana (abaikan nilai jual)</div><div class="v">${cashPay==null?'tidak pernah':(cashPay>50?'>50 th':dur(cashPay*12))}</div></div>
+    <div class="stat"><div class="k">Biaya per km (tahan | tukar)</div><div class="v">Rp${nf.format(Math.round(tA[Hm]/(d.kmYr*H)))} | Rp${nf.format(Math.round(tB[Hm]/(d.kmYr*H)))}</div></div>`;
+  const th=thresholdD1(p,sel.cand,Hm);
+  const r1=(sel.cand.type==='ev'?p.ev_r1:p.ice_r1);
+  $('insight').innerHTML = th.none?`Dengan asumsi Anda, ${esc(nameB)} tidak impas pada tahun ke-${H} walau penyusutan tahun pertamanya 0%.`
+    : th.over?`${esc(nameB)} impas pada tahun ke-${H} berapa pun penyusutan tahun pertamanya.`
+    : `Agar impas pada tahun ke-${H}, penyusutan tahun pertama ${esc(nameB)} harus <b>${nf.format(th.v*100)}%</b> atau lebih rendah. Asumsi Anda: <b>${nf.format(r1)}%</b>.`;
+  drawChart(tA,tB,bep,Hm);
+  drawBreakdown(A,B,Hm,nameA,nameB);
+  drawMaint(A,B,Hm,H,nameA,nameB);
+  drawYearly(tA,tB,H,nameA,nameB);
+  drawSens(p,sel.cand,Hm);
+  // kolom mobil terpilih (jangan menimpa ketikan)
+  const set=(id,v)=>{ const el=$(id); if(el&&document.activeElement!==el) el.value=v; };
+  set('sel_price',cs.P0/1e6); set('sel_eff',cs.eff); set('sel_fees',cs.fees/1e6); set('sel_ins',cs.ins*100);
+  $('formula').textContent=formulaText();
+}
+
+function niceTicks(min,max,n){ const span=max-min||1, raw=span/n, pw=Math.pow(10,Math.floor(Math.log10(raw))), f=raw/pw, step=(f<1.5?1:f<3?2:f<7?5:10)*pw; const t=[]; for(let v=Math.floor(min/step)*step; v<=max+step*0.001; v+=step) t.push(v); return t; }
+function drawChart(tA,tB,bep,Hm){
+  const W=720,Ht=340,L=62,R2=16,T=18,B=36,pw=W-L-R2,ph=Ht-T-B,Nn=180;
+  let lo=0,hi=0; for(let m=0;m<=Nn;m++){ hi=Math.max(hi,tA[m],tB[m]); lo=Math.min(lo,tA[m],tB[m]); }
+  const ticks=niceTicks(lo/1e6,hi/1e6,5), y0=ticks[0], y1=ticks[ticks.length-1];
+  const X=m=>L+m/Nn*pw, Y=v=>T+ph-(v/1e6-y0)/(y1-y0)*ph;
+  let s='';
+  ticks.forEach(t=>{ const y=T+ph-(t-y0)/(y1-y0)*ph; s+=`<line x1="${L}" x2="${W-R2}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/><text x="${L-8}" y="${y+4}" text-anchor="end">${nf.format(t)}</text>`; });
+  for(let yr=0;yr<=15;yr++){ const x=X(yr*12); s+=`<line x1="${x}" x2="${x}" y1="${T+ph}" y2="${T+ph+4}" stroke="var(--muted)"/><text x="${x}" y="${Ht-14}" text-anchor="middle">${yr}</text>`; }
+  s+=`<text x="${L+pw/2}" y="${Ht-1}" text-anchor="middle">tahun sejak hari ini</text><text x="10" y="${T+ph/2}" transform="rotate(-90 10 ${T+ph/2})" text-anchor="middle">Rp juta</text>`;
+  if(y0<0&&y1>0){ const yz=Y(0); s+=`<line x1="${L}" x2="${W-R2}" y1="${yz}" y2="${yz}" stroke="var(--muted)" stroke-width="1"/>`; }
+  const pts=t=>{ let d=''; for(let m=0;m<=Nn;m++) d+=(m?'L':'M')+X(m).toFixed(1)+' '+Y(t[m]).toFixed(1); return d; };
+  const xh=X(Hm); s+=`<line x1="${xh}" x2="${xh}" y1="${T}" y2="${T+ph}" stroke="var(--ink)" stroke-width="1" stroke-dasharray="2 4"/><text x="${Math.min(xh+4,W-R2-70)}" y="${T+12}">rencana ${Hm/12} th</text>`;
+  s+=`<path d="${pts(tA)}" fill="none" stroke="var(--a)" stroke-width="2.5" stroke-dasharray="7 5"/><path d="${pts(tB)}" fill="none" stroke="var(--b)" stroke-width="2.5"/>`;
+  if(bep!=null&&bep>0){ const m=Math.min(bep,Nn), i0=Math.floor(m), i1=Math.min(Nn,Math.ceil(m)), v=tA[i0]+(tA[i1]-tA[i0])*(m-i0);
+    s+=`<circle cx="${X(m)}" cy="${Y(v)}" r="5" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/>`;
+    const right=X(m)>W-100; s+=`<text x="${right?X(m)-8:X(m)+8}" y="${Y(v)-10}" text-anchor="${right?'end':'start'}" style="fill:var(--ink);font-weight:500">BEP ${esc(dur(bep))}</text>`; }
+  $('chart').innerHTML=s;
+}
+function drawBreakdown(A,B,Hm,nA,nB){
+  const rows=[['Penyusutan (nilai mobil yang hilang)','dep'],['Energi (BBM atau listrik)','energy'],['Perawatan terjadwal (ban, aki, servis, dll)','maint'],['Cadangan perbaikan tak terduga','reserve'],['Pajak tahunan (PKB + SWDKLLJ)','tax'],['Asuransi','ins'],['Biaya peluang dana','opp'],['Biaya awal tambahan','fees']];
+  let h=`<tr><th>Komponen (${Hm/12} tahun)</th><th>${esc(nA)}</th><th>${esc(nB)}</th><th>Selisih (tukar - tahan)</th></tr>`;
+  rows.forEach(([lab,k])=>{ const a=A.comp[k][Hm], b=B.comp[k][Hm], d=b-a; h+=`<tr><td>${lab}</td><td>${rp(a)}</td><td>${rp(b)}</td><td class="${d<0?'good':d>0?'bad':''}">${d>0?'+':''}${rp(d)}</td></tr>`; });
+  const a=A.tot[Hm], b=B.tot[Hm], d=b-a;
+  h+=`<tr class="total"><td>Total biaya bersih</td><td>${rp(a)}</td><td>${rp(b)}</td><td class="${d<0?'good':'bad'}">${d>0?'+':''}${rp(d)}</td></tr>`;
+  $('breakdown').innerHTML=h;
+}
+function drawMaint(A,B,Hm,H,nA,nB){
+  $('maintNote').textContent=`Jumlah penggantian dan total biayanya selama ${H} tahun, dihitung dari usia, odometer, dan jarak tempuh. Ubah biaya dan interval di bagian Asumsi.`;
+  const agg=ev=>{ const o={}; ev.filter(e=>e.m<=Hm).forEach(e=>{ o[e.name]=o[e.name]||{c:0,t:0}; o[e.name].c++; o[e.name].t+=e.cost; }); return o; };
+  const a=agg(A.events), b=agg(B.events), names=[...new Set([...Object.keys(a),...Object.keys(b)])];
+  let h=`<tr><th>Item</th><th>${esc(nA)}: kali</th><th>biaya</th><th>${esc(nB)}: kali</th><th>biaya</th></tr>`;
+  names.forEach(n=>{ h+=`<tr><td>${esc(n)}</td><td>${a[n]?a[n].c:0}</td><td>${a[n]?rp(a[n].t):'-'}</td><td>${b[n]?b[n].c:0}</td><td>${b[n]?rp(b[n].t):'-'}</td></tr>`; });
+  $('maintTable').innerHTML=h;
+}
+function drawYearly(tA,tB,H,nA,nB){
+  let h=`<tr><th>Akhir tahun</th><th>${esc(nA)}</th><th>${esc(nB)}</th><th>Tukar lebih hemat</th></tr>`;
+  for(let y=1;y<=15;y++){ const a=tA[y*12], b=tB[y*12], d=a-b; h+=`<tr${y===H?' style="background:var(--field)"':''}><td>Tahun ${y}${y===H?' (rencana)':''}</td><td>${rp(a)}</td><td>${rp(b)}</td><td class="${d>=0?'good':'bad'}">${d>=0?'+':''}${rp(d)}</td></tr>`; }
+  $('yearly').innerHTML=h;
+}
+function drawSens(p,cand,Hm){
+  const kms=[8000,12000,15000,20000,30000], ds=[0.15,0.25,0.35,0.50];
+  let h=`<tr><th>km/tahun</th>${ds.map(x=>`<th>Susut thn-1 ${x*100}%</th>`).join('')}</tr>`;
+  kms.forEach(km=>{ h+=`<tr><td>${nf.format(km)} km</td>`;
+    ds.forEach(x=>{ const r=pair(p,cand,{km:km,bd1:x}); const b=findBEP(r.A.tot,r.B.tot);
+      if(b==null) h+=`<td class="bad">✗ &gt;15 th</td>`; else if(b<=Hm) h+=`<td class="good">✓ ${dur(b)}</td>`; else h+=`<td class="warn">✗ ${dur(b)}</td>`; });
+    h+='</tr>'; });
+  $('sens').innerHTML=h;
+}
+function formulaText(){
+return `Untuk setiap bulan m = 1 ... 180, masing-masing mobil (lama dan baru):
+
+Nilai mobil(m)  = Nilai(m-1) x (1 - laju susut menurut usia)^(1/12)
+                  laju susut: usia < 1 th = tahun pertama; 1-4 th = tahun 2-4; >= 4 th = tahun 5 ke atas
+Nilai awal lama = harga bekas per tahun produksi (interpolasi) x (1 + koreksi odometer), atau isian Anda
+Energi          BBM: (km/12) / (km per liter) x harga BBM x (1 + inflasi BBM)^tahun
+                EV : (km/12) x (kWh/100 km / 100) x tarif campuran x (1 + inflasi listrik)^tahun
+Perawatan       tiap item diganti saat km sejak penggantian >= interval km, atau bulan >= interval bulan
+                biaya = biaya item x faktor kelas x (1 + inflasi perawatan)^tahun
+Cadangan        min(batas, Rp per tahun usia x usia) / 12 (mobil baru bebas selama masa garansi)
+Pajak           (tarif PKB x NJKB% x nilai di awal tahun + SWDKLLJ) / 12 (EV bebas PKB bila dicentang)
+Asuransi        persen x Nilai(m-1) / 12
+Biaya peluang   persen dana x Nilai(m-1) / 12
+
+Biaya bersih(m) = biaya awal + (Nilai awal - Nilai(m)) + kumulatif energi, perawatan, cadangan, pajak, asuransi, biaya peluang
+BEP             = bulan pertama saat Biaya bersih(mobil baru) <= Biaya bersih(mobil lama), diinterpolasi antar bulan
+Peringkat       = Biaya bersih(lama) - Biaya bersih(baru) pada akhir masa pakai; paling hemat di atas.
+                  Ada dua kategori: kelas yang sama dengan mobil lama, dan kelas lain. Tiap kategori menampilkan 5 pilihan dengan minimal 3 EV dan 2 ICE bila tersedia.
+Dana awal       = harga baru + biaya awal - nilai jual mobil lama (hanya informasi).`;
+}
+function sources(){
+  let h='<tr><th>Kode</th><th>Data</th><th>Dipakai</th><th>Tautan sumber</th><th>Catatan verifikasi</th></tr>';
+  SRC.forEach(s=>{ h+=`<tr id="s${s.id}"><td>S${s.id}</td><td>${esc(s.name)}</td><td>${esc(s.used)}</td><td>${s.links.map(l=>`<a href="${l[1]}" target="_blank" rel="noopener">${esc(l[0])}</a>`).join('<br>')}</td><td>${esc(s.note)}</td></tr>`; });
+  h+=`<tr><td>Asumsi</td><td>Jarak tempuh, konsumsi BBM/listrik, asuransi, porsi cas rumah, inflasi, biaya peluang dana, cadangan perbaikan, jadwal item perawatan non-sumber, kelas mobil</td><td colspan="3">Tidak ada sumber yang ditemukan untuk nilai bawaan ini. Ganti dengan data Anda (struk servis, tagihan listrik, STNK, polis asuransi). Katalog mobil baru hanya memuat model yang harganya berhasil diverifikasi; model lain dapat Anda uji dengan mengubah harga pada "Mobil baru yang sedang dibuka".</td></tr>`;
+  $('srcTable').innerHTML=h;
+}
+
+/* ---------- events ---------- */
+function summaryText(){
+  const p=params(), sel=selCand(), d=R.d, H=p.H;
+  return `Kalkulator BEP Mobil (${new Date().toISOString().slice(0,10)})\nMobil lama: ${d.name}, odometer ${nf.format(d.odo)} km, nilai ${rp(d.value*1e6)}\nRencana pakai ${H} tahun, ${nf.format(d.kmYr)} km/tahun\n\n`+
+    'Kelas sama:\n'+R.top.map((x,i)=>(i+1)+'. '+(x=>`${x.cand.name} (${x.cand.type.toUpperCase()}), OTR ${rp(x.price*1e6)}, BEP ${x.bep==null?'tidak impas dalam 15 th':(x.bep===0?'sejak awal':dur(x.bep))}, ${H} th ${x.diff>=0?'hemat ':'boros '}${rp(Math.abs(x.diff))}`)(x)).join('\n')+'\n\nGanti kelas:\n'+R.topOther.map((x,i)=>(i+1)+'. '+(x=>`${x.cand.name} (${x.cand.type.toUpperCase()}), OTR ${rp(x.price*1e6)}, BEP ${x.bep==null?'tidak impas dalam 15 th':(x.bep===0?'sejak awal':dur(x.bep))}, ${H} th ${x.diff>=0?'hemat ':'boros '}${rp(Math.abs(x.diff))}`)(x)).join('\n')+
+    `\n\nSumber dan asumsi lengkap ada di halaman kalkulator.`;
+}
+function fallbackCopy(t){ const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); let ok=false; try{ ok=document.execCommand('copy'); }catch(e){} ta.remove(); return ok; }
+function toast(t){ $('toast').textContent=t; setTimeout(()=>{ $('toast').textContent=''; },2500); }
+function onInput(e){
+  const el=e.target, id=el.id; if(!id) return;
+  if(id.startsWith('sel_')){ const k=id.slice(4), o=state.over[state.sel]||(state.over[state.sel]={}); const v=parseFloat(el.value); if(el.value===''){ delete o[k]; } else if(isFinite(v)) o[k]=v; }
+  else if(/^m[IE]_\d+_\d$/.test(id)){ const [pf,i,j]=id.split('_'); const arr=pf==='mI'?state.mICE:state.mEV; const v=parseFloat(el.value); arr[+i][+j]=isFinite(v)?v:0; }
+  else {
+    if(id==='fuelPreset'&&el.value!=='custom'){ $('fuelPrice').value=el.value; }
+    if(id==='homePreset'&&el.value!=='custom'){ $('homeTariff').value=el.value; }
+    pullScalar(el);
+    if(id==='fuelPrice'){ const m=['10000','15950','19150'].find(v=>Math.abs(+v-N(el.value))<0.01); $('fuelPreset').value=m||'custom'; state.fuelPreset=$('fuelPreset').value; }
+    if(id==='homeTariff'){ const m=['1444.7','1699.53'].find(v=>Math.abs(+v-N(el.value))<0.01); $('homePreset').value=m||'custom'; state.homePreset=$('homePreset').value; }
+    if(id==='fuelPreset'||id==='homePreset'){ pullScalar($(id==='fuelPreset'?'fuelPrice':'homeTariff')); }
+    if(id==='model'||id==='year'||id==='odo'||id==='otherSeg'||id==='otherValue'){ /* nilai otomatis berubah: biarkan override pengguna */ }
+  }
+  save(); render();
+}
+function init(){
+  buildForms(); sources(); load(); pushToDom();
+  document.addEventListener('input',onInput);
+  document.addEventListener('change',onInput);
+  ['opts','opts2'].forEach(id=>$(id).addEventListener('click',e=>{ const b=e.target.closest('.opt'); if(!b) return; state.sel=b.dataset.id; save(); render(); $('detTitle').scrollIntoView({behavior:'smooth',block:'start'}); }));
+  $('resetBtn').addEventListener('click',()=>{ const keep={model:state.model,year:state.year,odo:state.odo,otherSeg:state.otherSeg,otherValue:state.otherValue}; state=JSON.parse(JSON.stringify(DEF)); Object.assign(state,keep); pushToDom(); save(); render(); toast('Asumsi dikembalikan ke bawaan'); });
+  $('copyBtn').addEventListener('click',()=>{ const t=summaryText(); const done=ok=>toast(ok?'Ringkasan tersalin':'Tidak bisa menyalin'); if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(()=>done(true),()=>done(fallbackCopy(t))); } else done(fallbackCopy(t)); });
+  render();
+}
+init();
+</script>
+</body>
+</html>
