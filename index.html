@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kalkulator BEP Mobil</title>
+<title>Kalkulator BEP Ganti Mobil</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -11,24 +11,27 @@
    Warna: abu kebiruan netral; amber = tahan mobil lama, teal = tukar ke mobil baru; badge EV teal, ICE amber-abu.
    Huruf: Archivo (judul), IBM Plex Sans (teks), IBM Plex Mono (angka). */
 :root{
-  --bg:#EDF0F3; --surface:#FFFFFF; --field:#F5F7F9; --ink:#101A24; --muted:#556575; --line:#D3DAE1;
-  --a:#B4570A; --b:#0B7A75; --good:#1B7F4B; --bad:#B3261E; --warn:#8A5A00; --focus:#2459D6;
-  --good-bg:#E3F3EA; --bad-bg:#FBE7E5; --warn-bg:#FBF0D6; --ev-bg:#DDF2F0; --ice-bg:#F3E7DA;
+  --bg:#EEF5EF; --surface:#FFFFFF; --field:#F4F9F4; --ink:#0F2218; --muted:#4D6455; --line:#D1E1D4;
+  --sky1:#E7F6EC; --sky2:#CBEAD6; --oldbody:#B9A98C; --newbody:#1FA45A; --glass:#DCEBF2;
+  --a:#A25F14; --b:#13874A; --good:#17803F; --bad:#B3261E; --warn:#8A5A00; --focus:#1D5FD1;
+  --good-bg:#E1F3E7; --bad-bg:#FBE7E5; --warn-bg:#FBF0D6; --ev-bg:#DCF3E3; --ice-bg:#F3E8D6;
   --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
   --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0D141B; --surface:#151F29; --field:#0F1923; --ink:#E8EEF3; --muted:#9AA9B8; --line:#263544;
-    --a:#E8903F; --b:#3CC2B8; --good:#55C58A; --bad:#F0786F; --warn:#E0B04A; --focus:#7AA2FF;
-    --good-bg:#10281D; --bad-bg:#2E1715; --warn-bg:#2B2210; --ev-bg:#0F2B2A; --ice-bg:#2D2013; color-scheme:dark;
+    --bg:#0A1710; --surface:#10241A; --field:#0C1D14; --ink:#E6F3EA; --muted:#9DB8A6; --line:#234232;
+  --sky1:#14351F; --sky2:#0D2216; --oldbody:#7E705A; --newbody:#2FC272; --glass:#2B4A55;
+    --a:#E0A05A; --b:#4ADE80; --good:#5CD58C; --bad:#F0786F; --warn:#E0B04A; --focus:#7AA2FF;
+    --good-bg:#0F2D1B; --bad-bg:#2E1715; --warn-bg:#2B2210; --ev-bg:#0E3320; --ice-bg:#2D2313; color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0D141B; --surface:#151F29; --field:#0F1923; --ink:#E8EEF3; --muted:#9AA9B8; --line:#263544;
-  --a:#E8903F; --b:#3CC2B8; --good:#55C58A; --bad:#F0786F; --warn:#E0B04A; --focus:#7AA2FF;
-  --good-bg:#10281D; --bad-bg:#2E1715; --warn-bg:#2B2210; --ev-bg:#0F2B2A; --ice-bg:#2D2013; color-scheme:dark;
+  --bg:#0A1710; --surface:#10241A; --field:#0C1D14; --ink:#E6F3EA; --muted:#9DB8A6; --line:#234232;
+  --sky1:#14351F; --sky2:#0D2216; --oldbody:#7E705A; --newbody:#2FC272; --glass:#2B4A55;
+  --a:#E0A05A; --b:#4ADE80; --good:#5CD58C; --bad:#F0786F; --warn:#E0B04A; --focus:#7AA2FF;
+  --good-bg:#0F2D1B; --bad-bg:#2E1715; --warn-bg:#2B2210; --ev-bg:#0E3320; --ice-bg:#2D2313; color-scheme:dark;
 }
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
@@ -139,14 +142,51 @@ details[open] summary{margin-bottom:12px}
 footer{font-size:12px;color:var(--muted)}
 .ok{display:flex;flex-direction:column;gap:16px}
 @media (prefers-reduced-motion:no-preference){button{transition:border-color .12s}}
+
+/* tema green energi */
+body{background:radial-gradient(1100px 480px at 92% -8%,rgba(40,170,95,.14),transparent 62%),var(--bg)}
+.card{border-radius:10px;box-shadow:0 1px 3px rgba(12,70,40,.07)}
+.opt{border-radius:8px}
+.card>h2,.cardhead>h2{display:flex;align-items:center;gap:8px}
+.card>h2::before,.cardhead>h2::before{content:"";flex:none;width:6px;height:18px;border-radius:3px;background:var(--b)}
+h3{color:var(--b)}
+.hero{position:relative;overflow:hidden;border-radius:12px;padding:26px 22px 22px;color:#fff;background:linear-gradient(135deg,#0A5430 0%,#117A44 55%,#178A4C 100%);display:flex;flex-direction:column;gap:10px}
+.hero::after{content:"";position:absolute;right:-70px;top:-70px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.2),rgba(255,255,255,0) 70%);pointer-events:none}
+.hero h1{color:#fff;display:flex;align-items:center;gap:12px}
+.hero .lede{color:rgba(255,255,255,.92);margin-top:0}
+.logo{flex:none;width:38px;height:38px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:12px;font-weight:600;padding:3px 11px;border-radius:99px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4)}
+.vs{padding:0;gap:0;overflow:hidden}
+.vsStage{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:end;gap:6px;padding:20px 16px 0;background:linear-gradient(180deg,var(--sky1),var(--sky2))}
+.vsStage::before{content:"";position:absolute;right:12%;top:14px;width:34px;height:34px;border-radius:50%;background:#FFE08A;opacity:.75}
+.vcar{margin:0;min-width:0;position:relative}
+.vcar svg{width:100%;height:auto;max-height:170px;display:block}
+.vcar[data-type="ev"] .puffN{display:none}
+.vcar[data-type="ice"] .bolt,.vcar[data-type="ice"] .leaf{display:none}
+.vcar[data-type="ice"]{--newbody:#4C7FA8}
+.vsMid{align-self:center;padding-bottom:18px;position:relative}
+.vsBadge{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:var(--surface);color:var(--b);font-family:var(--f-display);font-weight:800;border:2px solid var(--b)}
+.road{height:10px;background:repeating-linear-gradient(90deg,#fff 0 18px,transparent 18px 38px) center/100% 2px no-repeat,#3C4A41}
+.vsCaps{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px 14px;padding:14px 16px 16px;align-items:start}
+.vsCaps>div{min-width:0}
+.vsTag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:1px 9px;border-radius:99px}
+.vsTag.o{background:var(--ice-bg);color:var(--a)}
+.vsTag.n{background:var(--ev-bg);color:var(--b)}
+.vsName{font-family:var(--f-display);font-weight:700;font-size:16px;margin-top:4px;overflow-wrap:anywhere}
+.vsMeta{font-size:12.5px;color:var(--muted)}
+.vsBep{text-align:center;font-size:12px;color:var(--muted);align-self:center;min-width:56px}
+.vsBep b{display:block;font-family:var(--f-display);font-size:15px;color:var(--b)}
+@media (max-width:560px){.vsStage{padding:14px 10px 0}.vsBadge{width:36px;height:36px;font-size:12px}.vsCaps{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.vsBep{grid-column:1/-1;order:3}.hero{padding:22px 16px 18px}}
 </style>
 
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>Kalkulator BEP Mobil</h1>
+  <header class="hero">
+    <h1><svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="#fff" opacity=".2"/><path d="M8 23C8 12 14 7 25 7c0 10-5 16-14 16z" fill="#fff"/><path d="M9 25c4-6 8-9 13-13" stroke="#117A44" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>Kalkulator BEP Ganti Mobil</h1>
     <p class="lede">Isi mobil Anda sekarang. Kami carikan lima mobil baru (EV dan bensin) yang masuk akal, lalu hitung kapan balik modalnya dibanding terus memakai mobil lama.</p>
+    <div class="chips"><span class="chip">Bensin vs listrik</span><span class="chip">BEP dalam tahun</span><span class="chip">Sumber bisa dicek</span></div>
   </header>
 
   <section class="card main" id="top" aria-label="Data mobil lama">
@@ -162,6 +202,20 @@ footer{font-size:12px;color:var(--muted)}
     </div>
     <p class="auto" id="autoInfo"></p>
     <p class="note">Perawatan (ban, aki, servis), pajak, asuransi, dan harga jual kembali dihitung otomatis dari tahun dan odometer. Semua angkanya bisa Anda ubah di bagian "Asumsi" di bawah.</p>
+  </section>
+
+  <section class="card vs" id="vs" aria-label="Perbandingan mobil lama dan mobil baru">
+    <div class="vsStage">
+      <figure class="vcar old"><svg viewBox="-20 0 340 150" role="img" aria-label="Ilustrasi mobil lama berbahan bakar bensin"><ellipse cx="165" cy="134" rx="130" ry="6" fill="#000" opacity=".15"/><g fill="#7C837F"><circle cx="14" cy="108" r="7" opacity=".6"/><circle cx="1" cy="98" r="9" opacity=".42"/><circle cx="-12" cy="86" r="11" opacity=".26"/></g><path d="M30 108V84Q30 74 40 72L80 66L104 38Q108 34 114 34H218Q226 34 230 40L250 68L288 76Q298 78 298 88V108Q298 114 292 114H36Q30 114 30 108Z" fill="var(--oldbody)"/><path d="M112 44H152V66H98Z" fill="var(--glass)"/><path d="M160 44H214L232 66H160Z" fill="var(--glass)"/><path d="M156 44V108" stroke="#000" stroke-opacity=".2" stroke-width="2" fill="none"/><ellipse cx="120" cy="100" rx="14" ry="5" fill="#8A4B1F" opacity=".55"/><ellipse cx="252" cy="94" rx="9" ry="4" fill="#8A4B1F" opacity=".5"/><rect x="30" y="104" width="268" height="6" fill="#000" opacity=".15"/><rect x="284" y="80" width="12" height="8" rx="2" fill="#F2E3A3"/><rect x="30" y="80" width="8" height="10" rx="2" fill="#C0392B"/><g><circle cx="86" cy="114" r="21" fill="#2B2F2D"/><circle cx="86" cy="114" r="9" fill="#A9AFAB"/><circle cx="246" cy="114" r="21" fill="#2B2F2D"/><circle cx="246" cy="114" r="9" fill="#A9AFAB"/></g></svg></figure>
+      <div class="vsMid"><span class="vsBadge">VS</span></div>
+      <figure class="vcar new" id="vsNewCar" data-type="ev"><svg viewBox="-20 0 340 150" role="img" aria-label="Ilustrasi mobil baru"><ellipse cx="165" cy="136" rx="130" ry="6" fill="#000" opacity=".15"/><g class="puffN" fill="#7C837F"><circle cx="14" cy="108" r="7" opacity=".6"/><circle cx="1" cy="98" r="9" opacity=".42"/><circle cx="-12" cy="86" r="11" opacity=".26"/></g><path d="M30 110V90Q30 78 42 75L90 66Q112 36 142 32H206Q236 34 254 60L286 70Q298 74 298 88V110Q298 116 292 116H36Q30 116 30 110Z" fill="var(--newbody)"/><path d="M118 44Q128 38 142 38H204Q222 40 236 60H108Z" fill="var(--glass)"/><path d="M170 38V60" stroke="var(--newbody)" stroke-width="4"/><path d="M44 90H284" stroke="#fff" stroke-opacity=".35" stroke-width="2" fill="none"/><g class="leaf"><path d="M146 100C144 88 154 80 170 80C171 94 162 102 146 100Z" fill="#fff"/><path d="M147 100C153 93 158 89 165 85" stroke="var(--newbody)" stroke-width="1.6" fill="none" stroke-linecap="round"/></g><path d="M278 80H296V86H276Z" fill="#E9FBFF"/><rect x="30" y="82" width="11" height="5" rx="2" fill="#FF5A4D"/><g><circle cx="88" cy="116" r="21" fill="#1F2523"/><circle cx="88" cy="116" r="12" fill="#D9F5E4"/><circle cx="88" cy="116" r="4" fill="#1F2523"/><circle cx="248" cy="116" r="21" fill="#1F2523"/><circle cx="248" cy="116" r="12" fill="#D9F5E4"/><circle cx="248" cy="116" r="4" fill="#1F2523"/></g><g class="bolt"><circle cx="160" cy="14" r="12" fill="#F6D44B"/><path d="M162 4L152 16H159L157 25L168 12H161Z" fill="#7A5B00"/></g></svg></figure>
+    </div>
+    <div class="road"></div>
+    <div class="vsCaps">
+      <div><span class="vsTag o">Mobil lama</span><div class="vsName" id="vsOldName"></div><div class="vsMeta" id="vsOldMeta"></div></div>
+      <div class="vsBep" id="vsBep"></div>
+      <div><span class="vsTag n">Mobil baru</span><div class="vsName" id="vsNewName"></div><div class="vsMeta" id="vsNewMeta"></div></div>
+    </div>
   </section>
 
   <section class="ok" id="out" aria-live="polite">
@@ -522,11 +576,12 @@ function params(){ const p=Object.assign({},state); p.H=clamp(Math.round(N(state
 
 /* ---------- render ---------- */
 let R=null;
-function selCand(){ return R.all.find(x=>x.cand.id===state.sel)||R.top[0]; }
+const firstEV=()=>R.top.find(x=>x.cand.type==='ev')||R.top[0];
+function selCand(){ return R.all.find(x=>x.cand.id===state.sel)||firstEV(); }
 function render(){
   const p=params(); R=rankAll(p);
   const d=R.d, H=p.H, Hm=R.Hm;
-  if(!R.top.concat(R.topOther).some(x=>x.cand.id===state.sel)) state.sel=R.top[0].cand.id;
+  if(!R.top.concat(R.topOther).some(x=>x.cand.id===state.sel)) state.sel=firstEV().cand.id;
   $('otherBox').hidden=state.model!=='other';
   $('oldValue').placeholder=nf.format(d.valueAuto); $('kmYr').placeholder=nf.format(d.kmAuto); $('oldKmpl').placeholder=nf.format(d.kmplAuto);
   $('autoInfo').innerHTML=`Usia sekitar <b>${nf.format(Math.round(d.ageY*10)/10)} tahun</b>, rata-rata <b>${nf.format(d.kmAuto)} km/tahun</b>, kelas <b>${SEG_LABEL[d.seg]}</b>. Taksiran nilai pasar hari ini <b>Rp${nf.format(Math.round(d.value))} jt</b>${d.m.anchors?` (harga bekas Moladin Okt 2026 ${S(7)}${d.adj?`, koreksi odometer ${nf.format(Math.round(d.adj*1000)/10)}%`:''})`:' (isian Anda)'}.`;
@@ -564,6 +619,12 @@ function render(){
   $('detTitle').textContent='Detail: '+nameB;
   $('selName').textContent=nameB;
   $('lgA').textContent='Tahan: '+nameA; $('lgB').textContent='Tukar: '+nameB;
+  $('vsOldName').textContent=nameA;
+  $('vsOldMeta').textContent='Odometer '+nf.format(d.odo)+' km, biaya bersih '+rp(tA[Hm]/Hm)+' per bulan';
+  $('vsNewName').textContent=nameB;
+  $('vsNewMeta').textContent=(sel.cand.type==='ev'?'Listrik (EV)':'Bensin (ICE)')+', OTR '+rp(sel.price*1e6)+', biaya bersih '+rp(tB[Hm]/Hm)+' per bulan';
+  $('vsNewCar').dataset.type=sel.cand.type;
+  $('vsBep').innerHTML='BEP<b>'+(bep==null?'tidak impas':(bep===0?'sejak awal':esc(dur(bep))))+'</b>';
   const within2=bep!=null&&bep<=Hm, slim=Math.abs(diffH)<0.08*Math.max(tA[Hm],1);
   const pill=$('pill');
   if(within2){pill.className='pill good';pill.textContent='Layak ditukar';}
