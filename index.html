@@ -180,6 +180,15 @@ h3{color:var(--b)}
 @media (max-width:560px){.vsStage{padding:14px 10px 0}.vsBadge{width:36px;height:36px;font-size:12px}.vsCaps{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.vsBep{grid-column:1/-1;order:3}.hero{padding:22px 16px 18px}}
 .obody{fill:var(--oldbody)}.nbody{fill:var(--newbody)}.glass{fill:var(--glass)}.nstroke{stroke:var(--newbody)}
 .vcar svg{aspect-ratio:340/150;min-height:80px}
+/* foto mobil */
+.vsStage{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;padding:14px;align-items:stretch}
+.vsStage::before{display:none}
+.vcar{border-radius:10px;overflow:hidden;background:var(--field);aspect-ratio:16/10}
+.vcar::before{content:"Foto belum tersedia";position:absolute;inset:0;display:grid;place-items:center;font-size:12px;color:var(--muted)}
+.vcar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.vsMid{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;padding:0}
+.vsBadge{box-shadow:0 2px 10px rgba(0,0,0,.28)}
+.vsCredit{font-size:11.5px;color:var(--muted);padding:0 16px 14px;line-height:1.45}
 </style>
 
 </head>
@@ -208,16 +217,16 @@ h3{color:var(--b)}
 
   <section class="card vs" id="vs" aria-label="Perbandingan mobil lama dan mobil baru">
     <div class="vsStage">
-      <figure class="vcar old"><svg width="340" height="150" viewBox="-20 0 340 150" role="img" aria-label="Ilustrasi mobil lama berbahan bakar bensin"><ellipse cx="165" cy="134" rx="130" ry="6" fill="#000" opacity=".15"/><g fill="#7C837F"><circle cx="14" cy="108" r="7" opacity=".6"/><circle cx="1" cy="98" r="9" opacity=".42"/><circle cx="-12" cy="86" r="11" opacity=".26"/></g><path d="M30 108V84Q30 74 40 72L80 66L104 38Q108 34 114 34H218Q226 34 230 40L250 68L288 76Q298 78 298 88V108Q298 114 292 114H36Q30 114 30 108Z" class="obody"/><path d="M112 44H152V66H98Z" class="glass"/><path d="M160 44H214L232 66H160Z" class="glass"/><path d="M156 44V108" stroke="#000" stroke-opacity=".2" stroke-width="2" fill="none"/><ellipse cx="120" cy="100" rx="14" ry="5" fill="#8A4B1F" opacity=".55"/><ellipse cx="252" cy="94" rx="9" ry="4" fill="#8A4B1F" opacity=".5"/><rect x="30" y="104" width="268" height="6" fill="#000" opacity=".15"/><rect x="284" y="80" width="12" height="8" rx="2" fill="#F2E3A3"/><rect x="30" y="80" width="8" height="10" rx="2" fill="#C0392B"/><g><circle cx="86" cy="114" r="21" fill="#2B2F2D"/><circle cx="86" cy="114" r="9" fill="#A9AFAB"/><circle cx="246" cy="114" r="21" fill="#2B2F2D"/><circle cx="246" cy="114" r="9" fill="#A9AFAB"/></g></svg></figure>
+      <figure class="vcar old"><img id="vsOldImg" alt="" decoding="async" referrerpolicy="no-referrer" style="visibility:hidden" onload="this.style.visibility='visible'" onerror="this.style.visibility='hidden'"></figure>
       <div class="vsMid"><span class="vsBadge">VS</span></div>
-      <figure class="vcar new" id="vsNewCar" data-type="ev"><svg width="340" height="150" viewBox="-20 0 340 150" role="img" aria-label="Ilustrasi mobil baru"><ellipse cx="165" cy="136" rx="130" ry="6" fill="#000" opacity=".15"/><g class="puffN" fill="#7C837F"><circle cx="14" cy="108" r="7" opacity=".6"/><circle cx="1" cy="98" r="9" opacity=".42"/><circle cx="-12" cy="86" r="11" opacity=".26"/></g><path d="M30 110V90Q30 78 42 75L90 66Q112 36 142 32H206Q236 34 254 60L286 70Q298 74 298 88V110Q298 116 292 116H36Q30 116 30 110Z" class="nbody"/><path d="M118 44Q128 38 142 38H204Q222 40 236 60H108Z" class="glass"/><path d="M170 38V60" class="nstroke" stroke-width="4"/><path d="M44 90H284" stroke="#fff" stroke-opacity=".35" stroke-width="2" fill="none"/><g class="leaf"><path d="M146 100C144 88 154 80 170 80C171 94 162 102 146 100Z" fill="#fff"/><path d="M147 100C153 93 158 89 165 85" class="nstroke" stroke-width="1.6" fill="none" stroke-linecap="round"/></g><path d="M278 80H296V86H276Z" fill="#E9FBFF"/><rect x="30" y="82" width="11" height="5" rx="2" fill="#FF5A4D"/><g><circle cx="88" cy="116" r="21" fill="#1F2523"/><circle cx="88" cy="116" r="12" fill="#D9F5E4"/><circle cx="88" cy="116" r="4" fill="#1F2523"/><circle cx="248" cy="116" r="21" fill="#1F2523"/><circle cx="248" cy="116" r="12" fill="#D9F5E4"/><circle cx="248" cy="116" r="4" fill="#1F2523"/></g><g class="bolt"><circle cx="160" cy="14" r="12" fill="#F6D44B"/><path d="M162 4L152 16H159L157 25L168 12H161Z" fill="#7A5B00"/></g></svg></figure>
+      <figure class="vcar new" id="vsNewCar" data-type="ev"><img id="vsNewImg" alt="" decoding="async" referrerpolicy="no-referrer" style="visibility:hidden" onload="this.style.visibility='visible'" onerror="this.style.visibility='hidden'"></figure>
     </div>
-    <div class="road"></div>
     <div class="vsCaps">
       <div><span class="vsTag o">Mobil lama</span><div class="vsName" id="vsOldName"></div><div class="vsMeta" id="vsOldMeta"></div></div>
       <div class="vsBep" id="vsBep"></div>
       <div><span class="vsTag n">Mobil baru</span><div class="vsName" id="vsNewName"></div><div class="vsMeta" id="vsNewMeta"></div></div>
     </div>
+    <p class="vsCredit" id="vsCredit"></p>
   </section>
 
   <section class="ok" id="out" aria-live="polite">
@@ -580,6 +589,38 @@ function params(){ const p=Object.assign({},state); p.H=clamp(Math.round(N(state
 let R=null;
 const firstEV=()=>R.top.find(x=>x.cand.type==='ev')||R.top[0];
 function selCand(){ return R.all.find(x=>x.cand.id===state.sel)||firstEV(); }
+/* Foto: Wikimedia Commons (lisensi bebas). Kunci = id mobil; m6s memakai foto m6. */
+const PHOTO={
+  xpander:['2022 Mitsubishi Xpander GLS (20221009) 01.jpg','Ethan Llamas','CC BY-SA 4.0'],
+  avanza:['2022 Toyota Avanza (PH).jpg','Ethan Llamas','CC BY-SA 4.0'],
+  xenia:['2022 Daihatsu Xenia 1.3 R W100RG (20220506).jpg','オーバードライブ83','CC BY-SA 4.0'],
+  ertiga:['Suzuki Ertiga (Front), Jakarta, Indonesia.jpg','RichardSummersault','CC0'],
+  brio:['2020 Honda Brio Satya S 1.2 DD1 (20211001) 01.jpg','オーバードライブ83','CC BY-SA 4.0'],
+  agya:['2017 Toyota Agya 1.2 G B101RA (20190515).jpg','オーバードライブ83','CC BY-SA 4.0'],
+  ayla:['2014 Daihatsu Ayla 1.0 X B100RS (20190615).jpg','オーバードライブ83','CC BY-SA 4.0'],
+  m6:['2024 BYD M6 (front).jpg','User3204','CC BY-SA 4.0'],
+  darion:['2025 Wuling Cortez Darion EV (Indonesia) front view 01.jpg','Andra Febrian','CC BY 4.0'],
+  d9:['2024 Denza D9.jpg','Calreyn88','CC BY-SA 4.0'],
+  atto1:['BYD Dolphin Surf IMG 3808.jpg','Alexander-93','CC BY-SA 4.0'],
+  air:['Wuling Air EV IMG001.jpg','Zotyefan','CC BY-SA 4.0'],
+  binguo:['2024 Wuling BinguoEV Long Range (Indonesia) front view.jpg','Andra Febrian','CC BY-SA 4.0'],
+  dolphin:['BYD Dolphin (Global version) IMG 9507.jpg','Alexander-93','CC BY-SA 4.0'],
+  rush:['2024 Toyota Rush GR Sport (Indonesia) front view.jpg','Andra Febrian','CC0'],
+  raize:['2021 Toyota Raize 1.0T G (Indonesia) front view.jpg','Andra Febrian','CC BY-SA 4.0'],
+  yaris:['Toyota Yaris Cross Hybrid (XP210) 1X7A1846.jpg','Alexander-93','CC BY-SA 4.0'],
+  atto3:['BYD Atto 3 1X7A6494.jpg','Alexander Migl','CC BY-SA 4.0'],
+  cloud:['Baojun Yunduo 001.jpg','JustAnotherCarDesigner','CC BY-SA 4.0'],
+  sealion7:['BYD Sealion 07 EV DSC 8264.jpg','Alexander Migl','CC BY-SA 4.0']
+};
+const CM='https://commons.wikimedia.org/wiki/';
+function photoKey(k){ return k==='m6s'?'m6':k; }
+function photoUrl(k){ const x=PHOTO[photoKey(k)]; return x?CM+'Special:FilePath/'+encodeURIComponent(x[0])+'?width=800':''; }
+function setPhoto(id,key,alt){
+  const im=$(id), u=photoUrl(key); im.alt=alt;
+  if(!u){ im.removeAttribute('src'); im.dataset.k=''; im.style.visibility='hidden'; return; }
+  if(im.dataset.k!==key){ im.dataset.k=key; im.style.visibility='hidden'; im.src=u; }
+}
+function creditOf(label,key){ const x=PHOTO[photoKey(key)]; return label+': '+(x?'<a href="'+CM+'File:'+encodeURIComponent(x[0])+'" target="_blank" rel="noopener">'+esc(x[1])+'</a>, '+esc(x[2]):'foto belum tersedia'); }
 function render(){
   const p=params(); R=rankAll(p);
   const d=R.d, H=p.H, Hm=R.Hm;
@@ -626,6 +667,8 @@ function render(){
   $('vsNewName').textContent=nameB;
   $('vsNewMeta').textContent=(sel.cand.type==='ev'?'Listrik (EV)':'Bensin (ICE)')+', OTR '+rp(sel.price*1e6)+', biaya bersih '+rp(tB[Hm]/Hm)+' per bulan';
   $('vsNewCar').dataset.type=sel.cand.type;
+  setPhoto('vsOldImg',p.model,nameA); setPhoto('vsNewImg',sel.cand.id,nameB);
+  $('vsCredit').innerHTML='Foto dari Wikimedia Commons. '+creditOf('Mobil lama',p.model)+'. '+creditOf('Mobil baru',sel.cand.id)+'. Foto hanya ilustrasi; generasi dan varian bisa berbeda dengan unit Anda.';
   $('vsBep').innerHTML='BEP<b>'+(bep==null?'tidak impas':(bep===0?'sejak awal':esc(dur(bep))))+'</b>';
   const within2=bep!=null&&bep<=Hm, slim=Math.abs(diffH)<0.08*Math.max(tA[Hm],1);
   const pill=$('pill');
